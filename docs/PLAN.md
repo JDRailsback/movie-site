@@ -129,8 +129,8 @@ Postgres + pgvector | Redis (cache + SSE pub/sub) | arq workers | Object store
   retrieval via `<=>`).
 - **Cache/pubsub:** Redis (TMDB cache, crosswalk, SSE, rate-limit token buckets).
 - **Real-time:** SSE for import progress.
-- **Hosting (suggested):** Vercel (frontend) + Fly.io/Railway/Render (Python +
-  workers) + managed Postgres w/ pgvector (Neon/Supabase) + managed Redis.
+- **Hosting:** $0 / free-tier posture — see §18 for the concrete free-tier mapping
+  and the storage discipline it forces (halfvec, higher corpus floor, offline ML).
 
 ---
 
@@ -359,11 +359,63 @@ watchlist, Watched because of this.
 
 ---
 
-## 17. Top risks & open questions
+## 17. Decisions & remaining open questions
 
-1. **Letterboxd ToS / scraping** — export-first everywhere vs. ship scraping for
-   comparison? (Rec: export-first; scraping as labeled fallback + takedown.)
-2. **Accounts** — magic-link vs pure anonymous? (Rec: accounts, for the north star.)
-3. **Corpus size / budget** — vote-count floor + corpus size drive cost/breadth.
-4. **Matching accuracy bar** — how aggressively to quarantine low-confidence matches.
-5. **CF weight** — trust in MovieLens given age/skew? (Rec: start low, tune via funnel.)
+### Resolved (2026-06-02)
+1. **Letterboxd ToS / scraping → DECIDED: export-first.** Official Letterboxd
+   export upload is the primary path everywhere. Username-scraping is a
+   clearly-labeled fallback (and the only option for stranger comparison), behind a
+   versioned adapter, cached + rate-limited, with a documented takedown path and
+   transient storage of third-party data. Legal read still required before any
+   public launch.
+2. **Accounts → DECIDED: magic-link email accounts.** Anonymous "try it" sessions
+   are allowed but ephemeral until claimed with an email. Required for the
+   north-star feedback funnel, incremental re-import, and remembering dismissals.
+3. **Budget / corpus size → DECIDED: no budget; free-tier-only posture.** See §18.
+   Corpus floor set to keep storage within free Postgres limits (see PHASE0 env:
+   `CORPUS_VOTE_COUNT_FLOOR`).
+
+### Still open (deferrable — tuning, not architecture)
+4. **Matching accuracy bar** — how aggressively to quarantine low-confidence
+   title→TMDB matches. Resolve with real data during Phase 1.
+5. **CF weight** — trust in MovieLens given age/skew. Start `w_cf` low (~0.08),
+   gate off below 20 matched films, tune via the funnel. Resolve in Phase 3.
+
+---
+
+## 18. Deployment & cost posture (no budget)
+
+Constraint: **$0 hosting budget.** Architecture from §4 is unchanged in shape, but
+every component must fit a free tier or run locally. This mainly bounds the corpus
+and pushes heavy ML offline.
+
+**Target free-tier mapping (revisit when budget exists):**
+- **Frontend:** Vercel Hobby (free) for the Next app.
+- **Postgres + pgvector:** Neon free tier (~0.5 GB storage). This is the binding
+  constraint — it caps corpus size.
+- **Redis:** Upstash / Vercel KV free tier (cache + SSE pub/sub). If the free Redis
+  is too limited for pub/sub, fall back to Postgres LISTEN/NOTIFY for SSE.
+- **API + worker:** a single small free/always-on instance (Fly.io free allowance
+  or Render free web service) running FastAPI + an in-process arq worker. Acceptable
+  at low traffic; split out workers only when there's budget.
+- **Object store (share images, exports):** Cloudflare R2 free tier or Vercel Blob.
+
+**Storage discipline (to fit ~0.5 GB Postgres):**
+- Use pgvector **`halfvec`** (2 bytes/dim) instead of `vector` (4 bytes/dim) for
+  `feature_vector` — halves vector storage. Consider 512 dims instead of 1024 if
+  pressure remains.
+- Raise the corpus vote-count floor (see PHASE0) so the corpus is ~15–25k
+  well-regarded films rather than 50k+. This narrows Hidden Gems' obscurity pool —
+  an accepted trade-off until budget allows a lower floor.
+- Don't store cast for every film (directors + a capped top-cast only); skip
+  overviews if storage is tight (re-fetch from TMDB on demand for detail views).
+
+**Heavy ML stays offline (Phase 3):**
+- Train MovieLens SVD/ALS and compute review embeddings as one-off **local batch
+  jobs on the dev machine**; commit/store only the *results* (item-factor matrix
+  ≈ tens of MB; per-user vectors computed cheaply at fold-in). Never run 25M-row
+  training on a free instance.
+
+**Implication:** at $0 the app is comfortably a personal / small-beta tool. The
+free Postgres storage cap is the first thing to hit; that's the trigger to revisit
+the floor, vector dims, and a paid DB tier.

@@ -111,7 +111,7 @@ API_BASE_URL=http://localhost:8000
 MAGIC_LINK_SIGNING_KEY=...
 EMAIL_PROVIDER_KEY=...            # magic-link delivery (Resend/Postmark)
 DEFAULT_REGION=US
-CORPUS_VOTE_COUNT_FLOOR=50        # see PLAN §17 open question
+CORPUS_VOTE_COUNT_FLOOR=200       # free-tier posture (PLAN §18); lower when budget allows
 MODEL_VERSION=2026.06.0
 ```
 
@@ -143,7 +143,7 @@ CREATE TABLE film (
     weighted_rating    REAL,                   -- precomputed (MATH §3)
     adult              BOOLEAN DEFAULT FALSE,
     status             TEXT,                    -- Released, etc.
-    feature_vector     vector(1024),           -- content vector (MATH §8.4)
+    feature_vector     halfvec(1024),          -- content vector (MATH §8.4); halfvec = 2B/dim (PLAN §18)
     enriched_at        TIMESTAMPTZ,
     created_at         TIMESTAMPTZ DEFAULT now()
 );
@@ -151,7 +151,7 @@ CREATE INDEX film_year_idx        ON film (year);
 CREATE INDEX film_wr_idx          ON film (weighted_rating DESC);
 CREATE INDEX film_pop_idx         ON film (popularity);
 CREATE INDEX film_title_trgm_idx  ON film USING gin (title gin_trgm_ops);
-CREATE INDEX film_vec_idx         ON film USING hnsw (feature_vector vector_cosine_ops);
+CREATE INDEX film_vec_idx         ON film USING hnsw (feature_vector halfvec_cosine_ops);
 
 CREATE TABLE person (
     tmdb_id   INTEGER PRIMARY KEY,
@@ -254,7 +254,7 @@ CREATE TABLE taste_profile (
     profile_id     UUID PRIMARY KEY REFERENCES letterboxd_profile,
     model_version  TEXT NOT NULL,
     mu             REAL, sigma REAL,             -- personal mean/std
-    taste_vector   vector(1024),                -- MATH §8.4
+    taste_vector   halfvec(1024),               -- MATH §8.4 (halfvec, PLAN §18)
     genre_affinity   JSONB,                      -- {genreId: {blend, A1..A4}}
     director_affinity JSONB,
     era_affinity     JSONB,
