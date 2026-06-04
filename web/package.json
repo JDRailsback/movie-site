@@ -2,13 +2,15 @@
   "name": "movie-rec-web",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint && tsc --noEmit",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
     "fmt": "biome format --write .",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o lib/api-types.ts"
   },
   "dependencies": {

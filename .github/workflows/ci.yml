@@ -35,3 +35,4 @@ jobs:
       - run: corepack enable
       - run: pnpm install
       - run: pnpm lint
+      - run: pnpm build   # also type-checks (generates next-env types)

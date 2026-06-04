@@ -14,12 +14,16 @@ body {
 
 /* Skeleton shimmer — PLAN §10: skeletons everywhere, never spinners. */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 .skeleton {
   @apply rounded-card;
-  background: linear-gradient(90deg, #F3E9D6 25%, #FBF6EC 37%, #F3E9D6 63%);
+  background: linear-gradient(90deg, #f3e9d6 25%, #fbf6ec 37%, #f3e9d6 63%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
 }
