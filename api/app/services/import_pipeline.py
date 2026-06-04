@@ -1,0 +1,217 @@
+"""Import state machine (PLAN §5).
+
+queued -> fetching -> matching -> enriching -> profiling -> ready (or failed).
+Profiling is a no-op placeholder until Phase 1; everything up to and including
+persisting the user's ratings is implemented here.
+
+Heavy compute (TMDB) is async; DB writes are sync Core run via to_thread, matching
+the enrichment worker pattern. Progress is written to the import row (for polling)
+and published to Redis (for SSE).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import uuid
+from typing import Any, cast
+
+from app.config import get_settings
+from app.db.base import get_engine
+from app.domain.enrich import parse_movie, weighted_rating
+from app.domain.letterboxd_export import FilmRecord, ParsedExport, parse_export
+from app.domain.matching import MatchResult, choose_match, normalize_title
+from app.integrations import progress
+from app.integrations.tmdb import TMDBClient
+from app.repositories import film_repo, profile_repo
+
+settings = get_settings()
+
+MATCH_THRESHOLD = 0.80
+IMPORT_CORPUS_MEAN = 6.3
+ZIP_KEY = "import:{import_id}:zip"
+
+
+async def run_pipeline(import_id: str, redis: Any, tmdb: TMDBClient) -> None:
+    iid = uuid.UUID(import_id)
+
+    async def stage(status: str, **counts: int) -> None:
+        await asyncio.to_thread(_set_status, iid, status, counts or None)
+        await progress.publish(redis, import_id, {"status": status, **counts})
+
+    try:
+        # --- fetching: load + parse the export ---
+        await stage("fetching")
+        raw = await redis.get(ZIP_KEY.format(import_id=import_id))
+        if raw is None:
+            raise RuntimeError("export bytes not found (expired before processing)")
+        parsed: ParsedExport = parse_export(raw)
+        profile_id = await asyncio.to_thread(_profile_id_for, iid)
+        await stage("matching", total=len(parsed.films), matched=0)
+
+        # --- matching: crosswalk cache, then TMDB search for misses ---
+        matched, unmatched = await _match_all(parsed.films, tmdb, redis, import_id)
+        await stage("enriching", matched=len(matched), unmatched=len(unmatched))
+
+        # --- enriching: ensure film rows exist for matched tmdb_ids ---
+        await _enrich(list({m.tmdb_id for m in matched.values()}), tmdb)
+
+        # --- persist ratings, unmatched, crosswalk ---
+        await asyncio.to_thread(_persist, profile_id, parsed, matched, unmatched)
+
+        # --- profiling: placeholder (Phase 1) ---
+        await stage("profiling")
+        # taste-profile computation lands in Phase 1
+
+        await asyncio.to_thread(_finish, iid, profile_id, parsed.username)
+        await stage("ready", matched=len(matched), unmatched=len(unmatched))
+    except Exception as exc:  # noqa: BLE001 - surface any failure to the user
+        await asyncio.to_thread(_fail, iid, str(exc))
+        await progress.publish(redis, import_id, {"status": "failed", "error": str(exc)})
+        raise
+
+
+async def _match_all(
+    films: list[FilmRecord], tmdb: TMDBClient, redis: Any, import_id: str
+) -> tuple[dict[str, MatchResult], list[FilmRecord]]:
+    # Resolve from the global crosswalk cache first.
+    keyed = [(f, normalize_title(f.title), f.year) for f in films]
+    cache_keys = [(nt, yr) for _, nt, yr in keyed if yr is not None]
+    cached = await asyncio.to_thread(_lookup_crosswalk, cache_keys)
+
+    matched: dict[str, MatchResult] = {}
+    misses: list[tuple[FilmRecord, str]] = []
+    for f, nt, yr in keyed:
+        hit = cached.get((nt, yr)) if yr is not None else None
+        if hit is not None:
+            matched[f.lb_uri] = MatchResult(tmdb_id=hit[0], confidence=hit[1], title=f.title)
+        else:
+            misses.append((f, nt))
+
+    # Search TMDB for cache misses (bounded concurrency lives in the client).
+    async def search_one(f: FilmRecord) -> tuple[FilmRecord, MatchResult | None]:
+        res = await tmdb.search_movie(f.title, f.year)
+        return f, choose_match(f.title, f.year, res.get("results", []))
+
+    results = await asyncio.gather(*(search_one(f) for f, _ in misses))
+
+    unmatched: list[FilmRecord] = []
+    for f, mr in results:
+        if mr is not None and mr.confidence >= MATCH_THRESHOLD:
+            matched[f.lb_uri] = mr
+        else:
+            unmatched.append(f)
+
+    # publish a mid-stage progress beat
+    await progress.publish(
+        redis, import_id, {"status": "matching", "matched": len(matched), "total": len(films)}
+    )
+    return matched, unmatched
+
+
+async def _enrich(tmdb_ids: list[int], tmdb: TMDBClient) -> None:
+    if not tmdb_ids:
+        return
+    payloads = await asyncio.gather(*(tmdb.get_movie(i) for i in tmdb_ids))
+    films = [parse_movie(p, regions={settings.default_region}) for p in payloads]
+
+    def _persist_films() -> None:
+        with get_engine().begin() as conn:
+            for f in films:
+                wr = weighted_rating(f.vote_average, f.vote_count, corpus_mean=IMPORT_CORPUS_MEAN)
+                film_repo.upsert_film(conn, f, weighted=wr)
+
+    await asyncio.to_thread(_persist_films)
+
+
+# --- sync DB helpers (run via to_thread) ---
+def _set_status(import_id: uuid.UUID, status: str, counts: dict[str, int] | None) -> None:
+    with get_engine().begin() as conn:
+        profile_repo.update_import(conn, import_id, status=status, stage_counts=counts)
+
+
+def _profile_id_for(import_id: uuid.UUID) -> uuid.UUID:
+    with get_engine().connect() as conn:
+        row = profile_repo.get_import(conn, import_id)
+    if row is None:
+        raise RuntimeError("import row missing")
+    return cast(uuid.UUID, row["profile_id"])
+
+
+def _lookup_crosswalk(keys: list[tuple[str, int]]) -> dict[tuple[str, int], tuple[int, float]]:
+    with get_engine().connect() as conn:
+        return profile_repo.lookup_crosswalk(conn, keys)
+
+
+def _persist(
+    profile_id: uuid.UUID,
+    parsed: ParsedExport,
+    matched: dict[str, MatchResult],
+    unmatched: list[FilmRecord],
+) -> None:
+    rating_rows: list[dict[str, Any]] = []
+    crosswalk_rows: list[dict[str, Any]] = []
+    for f in parsed.films:
+        mr = matched.get(f.lb_uri)
+        if mr is None:
+            continue
+        rating_rows.append(
+            {
+                "film_id": mr.tmdb_id,
+                "rating_0_10": f.rating_0_10,
+                "liked": f.liked,
+                "watched_date": f.watched_date,
+                "review_text": f.review_text,
+                "in_watchlist": f.in_watchlist,
+                "source": "export",
+            }
+        )
+        if f.year is not None:
+            crosswalk_rows.append(
+                {
+                    "norm_title": normalize_title(f.title),
+                    "year": f.year,
+                    "tmdb_id": mr.tmdb_id,
+                    "confidence": mr.confidence,
+                    "source": "tmdb_search",
+                }
+            )
+    unmatched_rows = [
+        {
+            "lb_uri": f.lb_uri,
+            "raw_title": f.title,
+            "raw_year": f.year,
+            "rating_0_10": f.rating_0_10,
+            "best_guess_tmdb": None,
+            "confidence": None,
+        }
+        for f in unmatched
+    ]
+    with get_engine().begin() as conn:
+        film_ids_present = _existing_film_ids(conn, [r["film_id"] for r in rating_rows])
+        present_rows = [r for r in rating_rows if r["film_id"] in film_ids_present]
+        profile_repo.save_ratings(conn, profile_id, present_rows)
+        profile_repo.save_crosswalk(
+            conn, [c for c in crosswalk_rows if c["tmdb_id"] in film_ids_present]
+        )
+        profile_repo.save_unmatched(conn, profile_id, unmatched_rows)
+
+
+def _existing_film_ids(conn: Any, ids: list[int]) -> set[int]:
+    from app.db import tables as t
+
+    if not ids:
+        return set()
+    rows = conn.execute(
+        t.film.select().with_only_columns(t.film.c.tmdb_id).where(t.film.c.tmdb_id.in_(ids))
+    )
+    return {r[0] for r in rows}
+
+
+def _finish(import_id: uuid.UUID, profile_id: uuid.UUID, username: str | None) -> None:
+    with get_engine().begin() as conn:
+        profile_repo.finalize_profile(conn, profile_id, username)
+
+
+def _fail(import_id: uuid.UUID, error: str) -> None:
+    with get_engine().begin() as conn:
+        profile_repo.update_import(conn, import_id, status="failed", error=error, finished=True)

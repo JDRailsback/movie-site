@@ -37,9 +37,15 @@ Other commands: `make help`.
 
 ## Status
 
-**Phase 0 (foundations) — in progress.** Repo skeleton, docker-compose, schema
-migration, FastAPI app with contract stubs, arq worker skeleton, and the Next
-design skeleton are in place. Route bodies return HTTP 501 with the implementing
-phase named, so the API surface is honest. Next: TMDB integration (0.3), auth
-(0.4), import state machine + SSE (0.5/0.6), and the front-end ingest flow (0.7).
-See PLAN §16 for the full roadmap.
+**Phase 0 (foundations) — in progress.**
+
+- ✅ 0.1–0.2 Repo skeleton, docker-compose, schema migration, FastAPI app + arq worker.
+- ✅ 0.3 TMDB integration (cache + single-flight), enrichment parser, corpus seeding.
+- ✅ 0.5/0.6 Import state machine + SSE progress + Letterboxd export-ZIP parser +
+  title→TMDB matching. Validated end-to-end: upload export → match → enrich →
+  persist ratings → `ready`, with low-confidence matches quarantined.
+- ⬜ 0.4 magic-link auth.
+- ⬜ 0.7 front-end ingest flow (landing → upload → live SSE progress).
+
+Remaining route bodies return HTTP 501 with the implementing phase named, so the
+API surface is honest. See PLAN §16 for the full roadmap.

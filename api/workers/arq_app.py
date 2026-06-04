@@ -57,8 +57,10 @@ async def enrich_films(ctx: dict[str, Any], tmdb_ids: list[int]) -> int:
 
 
 async def run_import(ctx: dict[str, Any], import_id: str) -> None:
-    """Drive the import state machine (PLAN §5). Stub — step 0.6."""
-    raise NotImplementedError("run_import: step 0.6")
+    """Drive the import state machine (PLAN §5)."""
+    from app.services.import_pipeline import run_pipeline
+
+    await run_pipeline(import_id, ctx["redis"], ctx["tmdb"])
 
 
 async def corpus_refresh(ctx: dict[str, Any]) -> None:

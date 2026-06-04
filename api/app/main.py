@@ -5,6 +5,12 @@ are contract stubs (HTTP 501) until Phase 1/2 fill in logic — the schemas in
 app/schemas are the single source of truth for the Next client (PHASE0 §4).
 """
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
+import redis.asyncio as aioredis
+from arq import create_pool
+from arq.connections import RedisSettings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,10 +19,23 @@ from app.routers import auth, feedback, health, imports, profiles, recommendatio
 
 settings = get_settings()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    app.state.redis = aioredis.from_url(settings.redis_url)
+    app.state.arq = await create_pool(RedisSettings.from_dsn(settings.redis_url))
+    try:
+        yield
+    finally:
+        await app.state.arq.aclose()
+        await app.state.redis.aclose()
+
+
 app = FastAPI(
     title="Film Recommendation API",
     version="0.1.0",
     description="Taste-driven film recommendations layered on Letterboxd data.",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

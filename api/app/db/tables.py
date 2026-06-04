@@ -10,12 +10,15 @@ from sqlalchemy import (
     TIMESTAMP,
     Boolean,
     Column,
+    Date,
     Integer,
     MetaData,
     SmallInteger,
     Table,
     Text,
+    Uuid,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 
 metadata = MetaData()
 
@@ -99,4 +102,63 @@ streaming_availability = Table(
     Column("provider", Text, primary_key=True),
     Column("offer_type", Text, primary_key=True),
     Column("refreshed_at", TIMESTAMP(timezone=True)),
+)
+
+# ---------- users / profiles / imports ----------
+letterboxd_profile = Table(
+    "letterboxd_profile",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("username", Text, nullable=False),
+    Column("display_name", Text),
+    Column("owner_user_id", Uuid),
+    Column("last_import_at", TIMESTAMP(timezone=True)),
+)
+
+profile_import = Table(
+    "profile_import",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("profile_id", Uuid),
+    Column("source", Text, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("stage_counts", JSONB),
+    Column("error", Text),
+    Column("started_at", TIMESTAMP(timezone=True)),
+    Column("finished_at", TIMESTAMP(timezone=True)),
+)
+
+user_film_rating = Table(
+    "user_film_rating",
+    metadata,
+    Column("profile_id", Uuid, primary_key=True),
+    Column("film_id", Integer, primary_key=True),
+    Column("rating_0_10", SmallInteger),
+    Column("liked", Boolean),
+    Column("watched_date", Date),
+    Column("review_text", Text),
+    Column("in_watchlist", Boolean),
+    Column("source", Text),
+)
+
+unmatched_film = Table(
+    "unmatched_film",
+    metadata,
+    Column("profile_id", Uuid, primary_key=True),
+    Column("lb_uri", Text, primary_key=True),
+    Column("raw_title", Text),
+    Column("raw_year", SmallInteger),
+    Column("rating_0_10", SmallInteger),
+    Column("best_guess_tmdb", Integer),
+    Column("confidence", REAL),
+)
+
+title_crosswalk = Table(
+    "title_crosswalk",
+    metadata,
+    Column("norm_title", Text, primary_key=True),
+    Column("year", SmallInteger, primary_key=True),
+    Column("tmdb_id", Integer),
+    Column("confidence", REAL),
+    Column("source", Text),
 )
