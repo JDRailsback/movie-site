@@ -1,18 +1,26 @@
 import type { Metadata } from "next";
+import { Fraunces, Nunito } from "next/font/google";
 import "./globals.css";
 
+// Display: Fraunces (a soft, characterful "wonky" serif). UI: Nunito (rounded,
+// friendly). Loaded as CSS variables consumed by tailwind's fontFamily.
+const display = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  axes: ["SOFT", "opsz", "WONK"],
+});
+const sans = Nunito({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+
 export const metadata: Metadata = {
-  title: "Reel — taste-driven film discovery",
+  title: "Reel — a playful map of your film taste",
   description:
-    "A discovery layer on top of Letterboxd: explainable, personalized film recommendations from your own watch history.",
+    "A whimsical discovery layer on top of Letterboxd: explainable, personalized film recommendations drawn from your own taste.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // suppressHydrationWarning: browser extensions (e.g. ColorZilla's
-  // cz-shortcut-listen) inject attributes on <html>/<body> before React
-  // hydrates. This silences that one-level, expected mismatch only.
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );

@@ -2,17 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Type tokens (PLAN §10). Wire real fonts via next/font in layout.tsx. */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Georgia", "Times New Roman", serif;
-}
-
 body {
-  @apply bg-cream text-ink font-sans antialiased;
+  @apply bg-paper text-ink font-sans antialiased;
+  /* faint paper speckle so the cream feels like real stock, not flat #fff */
+  background-image: radial-gradient(rgba(59, 50, 44, 0.035) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-/* Skeleton shimmer — PLAN §10: skeletons everywhere, never spinners. */
+/* Playful skeleton (PLAN §10: skeletons, never spinners) */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -22,8 +19,19 @@ body {
   }
 }
 .skeleton {
-  @apply rounded-card;
+  @apply rounded-squircle;
   background: linear-gradient(90deg, #f3e9d6 25%, #fbf6ec 37%, #f3e9d6 63%);
   background-size: 200% 100%;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.5s ease infinite;
+}
+
+/* Respect reduced motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

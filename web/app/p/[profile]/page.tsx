@@ -1,19 +1,21 @@
 "use client";
 
-// Profile hub (PLAN §5 step 5, §6): the taste breakdown is the core analytical
-// object. Client-fetched (consistent with the rest of the app) with skeletons
-// while loading and a "still computing" state if the import just finished.
+// Profile hub (whimsical redesign). A scrapbook of tilted pastel cards: genre
+// affinities, the directors you adore, your themes, and your blind spots.
+// Recently-watched intentionally omitted (it lives on Letterboxd).
 
-import { Poster } from "@/components/film/Poster";
 import { AffinityBars } from "@/components/taste/AffinityBars";
+import { FloatingShapes } from "@/components/ui/FloatingShapes";
+import { PaperCard } from "@/components/ui/PaperCard";
+import { Sticker } from "@/components/ui/Sticker";
 import {
-  type FilmCard,
   type ProfileSummary,
   type TasteProfile,
   getProfileSummary,
-  getRecentlyWatched,
   getTasteProfile,
 } from "@/lib/api";
+import { HEX, pastelFor } from "@/lib/pastels";
+import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -21,165 +23,173 @@ export default function ProfileHubPage() {
   const { profile } = useParams<{ profile: string }>();
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [taste, setTaste] = useState<TasteProfile | null>(null);
-  const [recent, setRecent] = useState<FilmCard[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       getProfileSummary(profile).catch(() => null),
       getTasteProfile(profile).catch(() => null),
-      getRecentlyWatched(profile).catch(() => []),
-    ]).then(([s, t, r]) => {
+    ]).then(([s, t]) => {
       setSummary(s);
       setTaste(t);
-      setRecent(r);
       setLoading(false);
     });
   }, [profile]);
 
   if (loading) return <HubSkeleton />;
 
+  const genres = taste
+    ? Object.values(taste.genreAffinity).sort((a, b) => b.affinity - a.affinity)
+    : [];
   const directors = taste
     ? Object.values(taste.directorAffinity)
         .filter((d) => d.affinity > 0)
         .sort((a, b) => b.affinity - a.affinity)
         .slice(0, 6)
     : [];
+  const topGenre = genres[0]?.name;
+  const topDirector = directors[0]?.name;
 
   return (
-    <main className="mx-auto max-w-5xl space-y-10 px-6 py-12">
-      <header className="space-y-1">
-        <p className="text-sm uppercase tracking-wide text-ink-soft">Taste profile</p>
-        <h1 className="font-display text-4xl font-semibold text-ink">
-          {summary?.displayName ?? summary?.username ?? "Your profile"}
+    <main className="relative mx-auto max-w-5xl px-6 py-14">
+      <FloatingShapes />
+
+      <header className="mb-10 space-y-3">
+        <p className="text-sm font-bold uppercase tracking-widest text-ink-faint">Your taste map</p>
+        <h1 className="font-display text-5xl font-black text-ink">
+          {summary?.displayName ?? summary?.username ?? "You"}
         </h1>
-        <p className="text-ink-soft">
-          {summary?.filmCount ?? 0} films
-          {taste?.runtimePref?.pref_min
-            ? ` · prefers ~${Math.round(taste.runtimePref.pref_min)} min`
-            : ""}
-        </p>
+        {taste && topGenre && (
+          <p className="max-w-xl text-lg text-ink-soft">
+            You light up for <Hl text={topGenre} k={topGenre} />
+            {topDirector ? (
+              <>
+                {" "}
+                and anything by <Hl text={topDirector} k={topDirector} />
+              </>
+            ) : null}
+            .
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2 pt-1">
+          {summary && <Sticker label={`${summary.filmCount} films`} pastel="sky" index={0} />}
+          {taste?.runtimePref?.pref_min ? (
+            <Sticker
+              label={`~${Math.round(taste.runtimePref.pref_min)} min sweet spot`}
+              pastel="peach"
+              index={1}
+            />
+          ) : null}
+        </div>
       </header>
 
       {!taste ? (
-        <p className="rounded-card bg-cream-50 px-5 py-4 text-ink-soft">
-          Your taste profile is still being computed — refresh in a moment.
-        </p>
-      ) : (
-        <>
-          <section className="grid gap-8 md:grid-cols-[1.4fr_1fr]">
-            <Card
-              title="Genre affinities"
-              hint="How you rate each genre vs. your own average — honestly."
-            >
-              <AffinityBars genres={taste.genreAffinity} />
-            </Card>
-
-            <div className="space-y-8">
-              <Card title="Directors you rate highly">
-                {directors.length ? (
-                  <ul className="space-y-2">
-                    {directors.map((d) => (
-                      <li key={d.name} className="flex items-center justify-between text-sm">
-                        <span className="text-ink">{d.name}</span>
-                        <span className="text-xs text-teal-600">
-                          +{d.affinity.toFixed(2)} · {d.count} films
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-ink-soft">Not enough repeat directors yet.</p>
-                )}
-              </Card>
-
-              <Card title="Your themes">
-                <div className="flex flex-wrap gap-2">
-                  {taste.topKeywords.slice(0, 14).map((k) => (
-                    <span
-                      key={k.id}
-                      className="rounded-full bg-sunny/30 px-3 py-1 text-xs text-ink"
-                    >
-                      {k.name}
-                    </span>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </section>
-
-          {recent.length > 0 && (
-            <Card title="Recently watched">
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                {recent.map((f) => (
-                  <Poster
-                    key={f.tmdbId}
-                    path={f.posterPath}
-                    title={f.title}
-                    rating={f.yourRating}
-                  />
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {taste.gaps?.decades?.length ? (
-            <Card
-              title="Blind spots"
-              hint="Eras you've under-explored — recommendations to fill them are coming."
-            >
-              <div className="flex flex-wrap gap-2">
-                {taste.gaps.decades.map((d) => (
-                  <span
-                    key={d.decade}
-                    className="rounded-full bg-coral/15 px-3 py-1 text-xs text-coral-600"
-                  >
-                    {d.decade}s
-                  </span>
-                ))}
-              </div>
-            </Card>
-          ) : null}
-
-          <p className="text-center text-sm text-ink-soft">
-            Personalized recommendations (blind spots, hidden gems, director rabbit holes) arrive in
-            Phase 2.
+        <PaperCard>
+          <p className="text-ink-soft">
+            Your taste map is still being drawn — refresh in a moment.
           </p>
-        </>
+        </PaperCard>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-5">
+          <PaperCard tilt={-0.8} className="md:col-span-3">
+            <CardTitle
+              title="Genre affinities"
+              hint="How you rate each genre vs. your own average — hover for the why."
+            />
+            <AffinityBars genres={taste.genreAffinity} />
+          </PaperCard>
+
+          <PaperCard tilt={1.2} delay={0.05} className="md:col-span-2">
+            <CardTitle title="Directors you adore" />
+            {directors.length ? (
+              <ul className="space-y-3">
+                {directors.map((d, i) => (
+                  <li key={d.name} className="flex items-center gap-3">
+                    <span
+                      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-ink"
+                      style={{ background: HEX[pastelFor(d.name)].fill }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 truncate font-semibold text-ink">{d.name}</span>
+                    <span className="text-xs font-bold text-ink-soft">{d.count} films</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-ink-soft">Not enough repeat directors yet.</p>
+            )}
+          </PaperCard>
+
+          <PaperCard tilt={-1.4} delay={0.1} className="md:col-span-2">
+            <CardTitle title="Your themes" />
+            <div className="flex flex-wrap gap-2">
+              {taste.topKeywords.slice(0, 14).map((k, i) => (
+                <Sticker key={k.id} label={k.name} index={i} />
+              ))}
+            </div>
+          </PaperCard>
+
+          <PaperCard tilt={0.9} delay={0.15} className="md:col-span-3">
+            <CardTitle
+              title="Blind spots"
+              hint="Eras you've barely touched — we'll help you fill them in Phase 2."
+            />
+            <div className="flex flex-wrap gap-2">
+              {taste.gaps?.decades?.length ? (
+                taste.gaps.decades.map((d, i) => (
+                  <Sticker key={d.decade} label={`${d.decade}s`} pastel="coral" index={i} />
+                ))
+              ) : (
+                <p className="text-sm text-ink-soft">You're remarkably well-rounded across eras.</p>
+              )}
+            </div>
+          </PaperCard>
+        </div>
       )}
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="mt-10 text-center text-sm text-ink-faint"
+      >
+        Recommendations — blind spots, hidden gems, director rabbit holes — are coming next.
+      </motion.p>
     </main>
   );
 }
 
-function Card({
-  title,
-  hint,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
+function Hl({ text, k }: { text: string; k: string }) {
   return (
-    <section className="space-y-3 rounded-card bg-cream-50 p-5 shadow-sm">
-      <div>
-        <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
-        {hint && <p className="text-xs text-ink-soft">{hint}</p>}
-      </div>
-      {children}
-    </section>
+    <span
+      className="rounded-md px-1.5 font-semibold text-ink"
+      style={{ background: `${HEX[pastelFor(k)].fill}` }}
+    >
+      {text}
+    </span>
+  );
+}
+
+function CardTitle({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="mb-4">
+      <h2 className="font-display text-2xl font-bold text-ink">{title}</h2>
+      {hint && <p className="mt-0.5 text-xs text-ink-soft">{hint}</p>}
+    </div>
   );
 }
 
 function HubSkeleton() {
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-6 py-12">
-      <div className="h-10 w-64 skeleton" />
-      <div className="grid gap-8 md:grid-cols-[1.4fr_1fr]">
-        <div className="h-72 skeleton rounded-card" />
-        <div className="h-72 skeleton rounded-card" />
+    <main className="mx-auto max-w-5xl px-6 py-14">
+      <div className="mb-10 h-14 w-64 skeleton" />
+      <div className="grid gap-6 md:grid-cols-5">
+        <div className="h-96 skeleton rounded-squircle md:col-span-3" />
+        <div className="h-96 skeleton rounded-squircle md:col-span-2" />
+        <div className="h-40 skeleton rounded-squircle md:col-span-2" />
+        <div className="h-40 skeleton rounded-squircle md:col-span-3" />
       </div>
-      <div className="h-48 skeleton rounded-card" />
     </main>
   );
 }

@@ -1,18 +1,20 @@
 "use client";
 
-// Landing + entry (PLAN §10). Two ingest paths: export upload (primary,
-// decision #1) and username lookup (fallback). On success, route to the live
-// import progress screen.
+// Landing (whimsical redesign). A breathing blob drop-zone for the export
+// (primary), a username pill (fallback), drifting pastel shapes behind.
 
+import { FloatingShapes } from "@/components/ui/FloatingShapes";
 import { importByUsername, uploadExport } from "@/lib/api";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { type DragEvent, useRef, useState } from "react";
 
 export default function LandingPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function go(promise: Promise<{ importId: string; profileId: string }>) {
@@ -26,69 +28,113 @@ export default function LandingPage() {
       });
   }
 
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
     if (file) go(uploadExport(file));
   }
 
-  function onUsername(e: React.FormEvent) {
-    e.preventDefault();
-    if (username.trim()) go(importByUsername(username.trim()));
-  }
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-10 px-6 text-center">
-      <div className="space-y-3">
-        <h1 className="font-display text-5xl font-semibold text-ink">
-          Find the next film you&apos;ll love.
-        </h1>
-        <p className="text-lg text-ink-soft">
-          A discovery layer on top of Letterboxd — explainable recommendations drawn from your own
-          taste, not the crowd&apos;s.
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-16 text-center">
+      <FloatingShapes />
+
+      <div className="space-y-4">
+        <motion.h1
+          initial={{ scale: 0.7, opacity: 0, rotate: -4 }}
+          animate={{ scale: 1, opacity: 1, rotate: -2 }}
+          transition={{ type: "spring", stiffness: 200, damping: 12 }}
+          className="font-display text-7xl font-black text-ink"
+        >
+          Reel
+        </motion.h1>
+        <p className="mx-auto max-w-md text-lg text-ink-soft">
+          A playful map of your film taste — drawn from <em>your</em> ratings, not the crowd&apos;s.
+          Drop your Letterboxd history and let&apos;s wander.
         </p>
       </div>
 
-      <div className="w-full max-w-md space-y-5 rounded-card bg-cream-50 p-6 shadow-sm">
-        <input ref={fileRef} type="file" accept=".zip" className="hidden" onChange={onFile} />
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
-          className="w-full rounded-card bg-teal px-5 py-3 font-medium text-cream-50 transition hover:bg-teal-600 disabled:opacity-60"
-        >
-          {busy ? "Starting…" : "Upload your Letterboxd export"}
-        </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".zip"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) go(uploadExport(f));
+        }}
+      />
 
-        <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-ink-soft">
-          <span className="h-px flex-1 bg-cream-200" />
-          or
-          <span className="h-px flex-1 bg-cream-200" />
-        </div>
+      <motion.button
+        type="button"
+        disabled={busy}
+        onClick={() => fileRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        whileHover={{ scale: 1.04 }}
+        whileTap={{ scale: 0.97 }}
+        animate={dragging ? { scale: 1.08 } : {}}
+        className={`grid h-60 w-60 place-items-center rounded-blob text-center text-ink shadow-lift transition-colors ${
+          dragging ? "bg-mint" : "bg-butter"
+        } ${busy ? "opacity-70" : "animate-breathe"}`}
+      >
+        <span className="px-6">
+          <span className="block font-display text-2xl font-bold">
+            {busy ? "Unspooling…" : dragging ? "Drop it!" : "Drop your export here"}
+          </span>
+          <span className="mt-1 block text-sm text-ink-soft">or tap to browse · .zip</span>
+        </span>
+      </motion.button>
 
-        <form onSubmit={onUsername} className="space-y-2">
-          <input
-            type="text"
-            value={username}
-            disabled={busy}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="letterboxd username"
-            className="w-full rounded-card border border-cream-200 bg-cream px-4 py-2 text-ink outline-none focus:border-teal"
-          />
-          <button
-            type="submit"
-            disabled={busy || !username.trim()}
-            className="w-full rounded-card border border-teal px-5 py-2 font-medium text-teal transition hover:bg-cream-200 disabled:opacity-50"
-          >
-            Look up profile
-          </button>
-        </form>
-
-        {error && <p className="text-sm text-coral-600">{error}</p>}
+      <div className="flex w-full max-w-xs items-center gap-3 text-xs uppercase tracking-widest text-ink-faint">
+        <span className="h-px flex-1 bg-paper-edge" />
+        or peek at a username
+        <span className="h-px flex-1 bg-paper-edge" />
       </div>
 
-      <p className="max-w-md text-xs text-ink-soft">
-        Tip: in Letterboxd, Settings → Data → Export your data. Uploading is faster and more
-        complete than a username lookup.
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (username.trim()) go(importByUsername(username.trim()));
+        }}
+        className="flex w-full max-w-sm items-center gap-2"
+      >
+        <input
+          type="text"
+          value={username}
+          disabled={busy}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="letterboxd username"
+          className="h-12 flex-1 rounded-full border-2 border-paper-edge bg-paper px-5 text-ink outline-none transition focus:border-lilac-deep"
+        />
+        <motion.button
+          type="submit"
+          disabled={busy || !username.trim()}
+          whileHover={{ scale: 1.05, rotate: -2 }}
+          whileTap={{ scale: 0.95 }}
+          className="h-12 rounded-full bg-lilac px-5 font-semibold text-lilac-deep shadow-sticker disabled:opacity-50"
+        >
+          Go
+        </motion.button>
+      </form>
+
+      {error && (
+        <motion.p
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="rounded-full bg-coral px-4 py-2 text-sm font-medium text-coral-deep shadow-sticker"
+        >
+          {error}
+        </motion.p>
+      )}
+
+      <p className="max-w-sm text-xs text-ink-faint">
+        Tip: Letterboxd → Settings → Data → Export. Uploading is faster and far more complete than a
+        username peek.
       </p>
     </main>
   );
