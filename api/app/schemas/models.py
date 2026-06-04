@@ -6,7 +6,7 @@ TS client reads naturally.
 """
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -42,12 +42,12 @@ class Session(ApiModel):
 
 
 # --- imports ---
-class ImportSource(str, Enum):
+class ImportSource(StrEnum):
     export = "export"
     scrape = "scrape"
 
 
-class ImportState(str, Enum):
+class ImportState(StrEnum):
     queued = "queued"
     fetching = "fetching"
     matching = "matching"
@@ -138,7 +138,7 @@ class TasteProfile(ApiModel):
 
 
 # --- feedback ---
-class FeedbackAction(str, Enum):
+class FeedbackAction(StrEnum):
     seen = "seen"
     loved = "loved"
     not_interested = "not_interested"
