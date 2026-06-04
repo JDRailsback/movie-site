@@ -65,12 +65,18 @@ async def run(pages: int) -> int:
     print(f"[seed] enriched {len(films)} films; corpus_mean={corpus_mean:.3f}. Upserting...")
 
     engine = get_engine()
-    with engine.begin() as conn:
-        for f in films:
-            wr = weighted_rating(f.vote_average, f.vote_count, corpus_mean=corpus_mean)
-            upsert_film(conn, f, weighted=wr)
+    ok, failed = 0, 0
+    for f in films:
+        wr = weighted_rating(f.vote_average, f.vote_count, corpus_mean=corpus_mean)
+        try:  # per-film tx so one bad payload doesn't roll back the whole seed
+            with engine.begin() as conn:
+                upsert_film(conn, f, weighted=wr)
+            ok += 1
+        except Exception as exc:  # noqa: BLE001 - seed is best-effort
+            failed += 1
+            print(f"[seed] skipped {f.tmdb_id} ({f.title}): {exc}")
 
-    print(f"[seed] done. {len(films)} films in corpus slice.")
+    print(f"[seed] done. {ok} upserted, {failed} skipped.")
     return 0
 
 

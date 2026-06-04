@@ -104,8 +104,13 @@ def _upsert_named(conn: Connection, table: Table, pk: str, rows: list[tuple[int,
 
 
 def _upsert_people(conn: Connection, people: set[tuple[int, str, str | None]]) -> None:
-    values = [{"tmdb_id": i, "name": n, "department": d} for i, n, d in people]
-    stmt = insert(t.person).values(values)
+    # Dedupe by tmdb_id: one person can be credited twice on a film (e.g. director
+    # who also acts), which would put duplicate keys in a single ON CONFLICT DO
+    # UPDATE — Postgres rejects that ("cannot affect row a second time").
+    by_id: dict[int, dict[str, Any]] = {}
+    for i, n, d in people:
+        by_id.setdefault(i, {"tmdb_id": i, "name": n, "department": d})
+    stmt = insert(t.person).values(list(by_id.values()))
     stmt = stmt.on_conflict_do_update(index_elements=["tmdb_id"], set_={"name": stmt.excluded.name})
     conn.execute(stmt)
 

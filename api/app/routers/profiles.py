@@ -1,26 +1,94 @@
-"""Profile + taste-profile reads (PLAN §6). Contract stubs — logic in Phase 1."""
+"""Profile + taste-profile reads (PLAN §6)."""
 
-from fastapi import APIRouter
+from __future__ import annotations
 
-from app.routers._stub import not_implemented
+import asyncio
+import uuid
+from typing import Any
+
+from fastapi import APIRouter, HTTPException
+
+from app.db.base import get_engine
+from app.repositories import taste_repo
 from app.schemas.models import FilmCard, ProfileSummary, TasteProfile
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 
+def _uuid(profile_id: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(profile_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
+        ) from None
+
+
 @router.get("/{profile_id}")
-def get_profile(profile_id: str) -> ProfileSummary:
-    not_implemented("profile summary", phase="1")
-    raise AssertionError
+async def get_profile(profile_id: str) -> ProfileSummary:
+    pid = _uuid(profile_id)
+
+    def _read() -> dict[str, Any] | None:
+        with get_engine().connect() as conn:
+            return taste_repo.get_profile_summary(conn, pid)
+
+    row = await asyncio.to_thread(_read)
+    if row is None:
+        raise HTTPException(
+            status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
+        )
+    return ProfileSummary(**row)
 
 
 @router.get("/{profile_id}/taste")
-def get_taste(profile_id: str) -> TasteProfile:
-    not_implemented("taste profile", phase="1")
-    raise AssertionError
+async def get_taste(profile_id: str) -> TasteProfile:
+    pid = _uuid(profile_id)
+
+    def _read() -> dict[str, Any] | None:
+        with get_engine().connect() as conn:
+            return taste_repo.get_taste(conn, pid)
+
+    row = await asyncio.to_thread(_read)
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": {"code": "taste_not_ready", "message": "taste profile not computed yet"}
+            },
+        )
+    return TasteProfile(
+        profile_id=str(row["profile_id"]),
+        model_version=row["model_version"],
+        mu=row["mu"],
+        sigma=row["sigma"],
+        genre_affinity=row["genre_affinity"] or {},
+        director_affinity=row["director_affinity"] or {},
+        era_affinity=row["era_affinity"] or {},
+        country_affinity=row["country_affinity"] or {},
+        runtime_pref=row["runtime_pref"] or {},
+        top_keywords=row["top_keywords"] or [],
+        gaps=row["gaps"] or {},
+    )
 
 
 @router.get("/{profile_id}/recently-watched")
-def recently_watched(profile_id: str, limit: int = 24) -> list[FilmCard]:
-    not_implemented("recently watched", phase="1")
-    raise AssertionError
+async def recently_watched(profile_id: str, limit: int = 24) -> list[FilmCard]:
+    pid = _uuid(profile_id)
+
+    def _read() -> list[dict[str, Any]]:
+        with get_engine().connect() as conn:
+            return taste_repo.recently_watched(conn, pid, limit)
+
+    rows = await asyncio.to_thread(_read)
+    return [
+        FilmCard(
+            tmdb_id=r["tmdb_id"],
+            title=r["title"],
+            year=r["year"],
+            poster_path=r["poster_path"],
+            runtime_min=r["runtime_min"],
+            weighted_rating=r["weighted_rating"],
+            your_rating=r["rating_0_10"],
+        )
+        for r in rows
+    ]

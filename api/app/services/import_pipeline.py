@@ -23,6 +23,7 @@ from app.domain.matching import MatchResult, choose_match, normalize_title
 from app.integrations import progress
 from app.integrations.tmdb import TMDBClient
 from app.repositories import film_repo, profile_repo
+from app.services import taste_service
 
 settings = get_settings()
 
@@ -58,9 +59,9 @@ async def run_pipeline(import_id: str, redis: Any, tmdb: TMDBClient) -> None:
         # --- persist ratings, unmatched, crosswalk ---
         await asyncio.to_thread(_persist, profile_id, parsed, matched, unmatched)
 
-        # --- profiling: placeholder (Phase 1) ---
+        # --- profiling: compute the taste profile (Phase 1) ---
         await stage("profiling")
-        # taste-profile computation lands in Phase 1
+        await asyncio.to_thread(taste_service.compute_and_store, profile_id)
 
         await asyncio.to_thread(_finish, iid, profile_id, parsed.username)
         await stage("ready", matched=len(matched), unmatched=len(unmatched))
