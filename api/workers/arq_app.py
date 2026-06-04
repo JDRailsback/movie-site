@@ -42,7 +42,7 @@ async def enrich_films(ctx: dict[str, Any], tmdb_ids: list[int]) -> int:
     """Fetch + parse + upsert films. Idempotent; safe to retry."""
     tmdb: TMDBClient = ctx["tmdb"]
     payloads = await asyncio.gather(*(tmdb.get_movie(i) for i in tmdb_ids))
-    films = [parse_movie(p) for p in payloads]
+    films = [parse_movie(p, regions={settings.default_region}) for p in payloads]
 
     def _persist() -> None:
         with get_engine().begin() as conn:

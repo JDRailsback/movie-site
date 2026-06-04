@@ -59,7 +59,15 @@ def _year_from(release_date: str | None) -> int | None:
     return None
 
 
-def parse_movie(payload: dict[str, Any], *, cast_limit: int = 10) -> EnrichedFilm:
+def parse_movie(
+    payload: dict[str, Any], *, cast_limit: int = 10, regions: set[str] | None = None
+) -> EnrichedFilm:
+    """Parse a TMDB movie payload.
+
+    `regions` filters streaming offers to those countries (PLAN §13: storing all
+    ~50 TMDB regions per film is ~500 rows/film and far too heavy for the free-tier
+    corpus). None keeps all regions (used in tests).
+    """
     keywords_block = payload.get("keywords") or {}
     credits = payload.get("credits") or {}
     crew = credits.get("crew") or []
@@ -94,14 +102,16 @@ def parse_movie(payload: dict[str, Any], *, cast_limit: int = 10) -> EnrichedFil
         directors=directors,
         cast_top=cast_top,
         countries=[c["iso_3166_1"] for c in payload.get("production_countries", [])],
-        streaming=_parse_providers(payload.get("watch/providers") or {}),
+        streaming=_parse_providers(payload.get("watch/providers") or {}, regions),
     )
 
 
-def _parse_providers(block: dict[str, Any]) -> list[StreamingOffer]:
+def _parse_providers(block: dict[str, Any], regions: set[str] | None) -> list[StreamingOffer]:
     """Flatten watch/providers.results[region][offer_type][] into offers."""
     offers: list[StreamingOffer] = []
     for region, region_block in (block.get("results") or {}).items():
+        if regions is not None and region not in regions:
+            continue
         for offer_type in ("flatrate", "rent", "buy", "free", "ads"):
             for prov in region_block.get(offer_type, []) or []:
                 offers.append(StreamingOffer(region, prov["provider_name"], offer_type))

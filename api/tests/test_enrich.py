@@ -40,6 +40,15 @@ def test_streaming_offers_have_shape() -> None:
         assert offer.offer_type in {"flatrate", "rent", "buy", "free", "ads"}
 
 
+def test_region_filter_limits_streaming() -> None:
+    payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    all_regions = parse_movie(payload)
+    us_only = parse_movie(payload, regions={"US"})
+    # Filtering must not increase offers, and US-only must be region-pure.
+    assert len(us_only.streaming) <= len(all_regions.streaming)
+    assert {o.region for o in us_only.streaming} <= {"US"}
+
+
 def test_weighted_rating_shrinks_toward_mean() -> None:
     # low vote count -> pulled hard toward corpus mean
     low = weighted_rating(9.0, 5, corpus_mean=6.0, m=250)

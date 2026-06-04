@@ -22,13 +22,15 @@ from app.integrations.tmdb import TMDBClient
 from app.repositories.film_repo import upsert_film
 
 
-async def _gather_films(tmdb: TMDBClient, floor: int, pages: int) -> list[EnrichedFilm]:
+async def _gather_films(
+    tmdb: TMDBClient, floor: int, pages: int, regions: set[str]
+) -> list[EnrichedFilm]:
     ids: list[int] = []
     for page in range(1, pages + 1):
         disc = await tmdb.discover_movies(vote_count_gte=floor, page=page)
         ids.extend(m["id"] for m in disc.get("results", []))
     payloads = await asyncio.gather(*(tmdb.get_movie(i) for i in ids))
-    return [parse_movie(p) for p in payloads]
+    return [parse_movie(p, regions=regions) for p in payloads]
 
 
 async def _maybe_redis(url: str) -> Any:  # optional dependency, best-effort
@@ -53,7 +55,7 @@ async def run(pages: int) -> int:
     async with TMDBClient(settings.tmdb_read_token, redis=redis) as tmdb:
         floor = settings.corpus_vote_count_floor
         print(f"[seed] discovering films with vote_count >= {floor} across {pages} page(s)...")
-        films = await _gather_films(tmdb, floor, pages)
+        films = await _gather_films(tmdb, floor, pages, {settings.default_region})
 
     if redis is not None:
         await redis.aclose()
