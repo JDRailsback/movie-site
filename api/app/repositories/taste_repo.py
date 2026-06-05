@@ -80,7 +80,8 @@ def load_corpus_stats(conn: Connection, keyword_ids: set[int], person_ids: set[i
             )
         )
     }
-    decade_expr = (t.film.c.year / 10 * 10).label("decade")
+    # Floor to the decade with modulo (integer-safe; year/10*10 mis-divided).
+    decade_expr = (t.film.c.year - t.film.c.year % 10).label("decade")
     decade_base = {
         int(dec): cnt / total
         for dec, cnt in conn.execute(

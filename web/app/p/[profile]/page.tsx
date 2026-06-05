@@ -1,10 +1,18 @@
 "use client";
 
-// Profile hub (whimsical redesign). A scrapbook of tilted pastel cards: genre
-// affinities, the directors you adore, your themes, and your blind spots.
-// Recently-watched intentionally omitted (it lives on Letterboxd).
+// Profile hub (whimsical). A scrapbook of pastel tiles in two balanced columns
+// so nothing stretches into empty space. Recently-watched omitted (lives on
+// Letterboxd).
 
-import { AffinityBars } from "@/components/taste/AffinityBars";
+import {
+  DecadeTile,
+  DiggingTile,
+  DirectorsTile,
+  GenreTile,
+  PassportTile,
+  PersonalityTile,
+  ThemesTile,
+} from "@/components/taste/Tiles";
 import { FloatingShapes } from "@/components/ui/FloatingShapes";
 import { PaperCard } from "@/components/ui/PaperCard";
 import { Sticker } from "@/components/ui/Sticker";
@@ -42,13 +50,10 @@ export default function ProfileHubPage() {
     ? Object.values(taste.genreAffinity).sort((a, b) => b.affinity - a.affinity)
     : [];
   const directors = taste
-    ? Object.values(taste.directorAffinity)
-        .filter((d) => d.affinity > 0)
-        .sort((a, b) => b.affinity - a.affinity)
-        .slice(0, 6)
+    ? Object.values(taste.directorAffinity).sort((a, b) => b.affinity - a.affinity)
     : [];
   const topGenre = genres[0]?.name;
-  const topDirector = directors[0]?.name;
+  const topDirector = directors.filter((d) => d.affinity > 0)[0]?.name;
 
   return (
     <main className="relative mx-auto max-w-5xl px-6 py-14">
@@ -71,16 +76,11 @@ export default function ProfileHubPage() {
             .
           </p>
         )}
-        <div className="flex flex-wrap gap-2 pt-1">
-          {summary && <Sticker label={`${summary.filmCount} films`} pastel="sky" index={0} />}
-          {taste?.runtimePref?.pref_min ? (
-            <Sticker
-              label={`~${Math.round(taste.runtimePref.pref_min)} min sweet spot`}
-              pastel="peach"
-              index={1}
-            />
-          ) : null}
-        </div>
+        {summary && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Sticker label={`${summary.filmCount} films`} pastel="sky" index={0} />
+          </div>
+        )}
       </header>
 
       {!taste ? (
@@ -90,61 +90,18 @@ export default function ProfileHubPage() {
           </p>
         </PaperCard>
       ) : (
-        <div className="grid gap-6 md:grid-cols-5">
-          <PaperCard tilt={-0.8} className="md:col-span-3">
-            <CardTitle
-              title="Genre affinities"
-              hint="How you rate each genre vs. your own average — hover for the why."
-            />
-            <AffinityBars genres={taste.genreAffinity} />
-          </PaperCard>
-
-          <PaperCard tilt={1.2} delay={0.05} className="md:col-span-2">
-            <CardTitle title="Directors you adore" />
-            {directors.length ? (
-              <ul className="space-y-3">
-                {directors.map((d, i) => (
-                  <li key={d.name} className="flex items-center gap-3">
-                    <span
-                      className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-ink"
-                      style={{ background: HEX[pastelFor(d.name)].fill }}
-                    >
-                      {i + 1}
-                    </span>
-                    <span className="flex-1 truncate font-semibold text-ink">{d.name}</span>
-                    <span className="text-xs font-bold text-ink-soft">{d.count} films</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-ink-soft">Not enough repeat directors yet.</p>
-            )}
-          </PaperCard>
-
-          <PaperCard tilt={-1.4} delay={0.1} className="md:col-span-2">
-            <CardTitle title="Your themes" />
-            <div className="flex flex-wrap gap-2">
-              {taste.topKeywords.slice(0, 14).map((k, i) => (
-                <Sticker key={k.id} label={k.name} index={i} />
-              ))}
-            </div>
-          </PaperCard>
-
-          <PaperCard tilt={0.9} delay={0.15} className="md:col-span-3">
-            <CardTitle
-              title="Blind spots"
-              hint="Eras you've barely touched — we'll help you fill them in Phase 2."
-            />
-            <div className="flex flex-wrap gap-2">
-              {taste.gaps?.decades?.length ? (
-                taste.gaps.decades.map((d, i) => (
-                  <Sticker key={d.decade} label={`${d.decade}s`} pastel="coral" index={i} />
-                ))
-              ) : (
-                <p className="text-sm text-ink-soft">You're remarkably well-rounded across eras.</p>
-              )}
-            </div>
-          </PaperCard>
+        <div className="grid items-start gap-6 md:grid-cols-2">
+          <div className="flex flex-col gap-6">
+            <GenreTile taste={taste} tilt={-0.8} delay={0} />
+            <ThemesTile taste={taste} tilt={-1.2} delay={0.1} />
+            <DiggingTile taste={taste} tilt={0.8} delay={0.15} />
+          </div>
+          <div className="flex flex-col gap-6">
+            <DirectorsTile taste={taste} tilt={1.1} delay={0.05} />
+            <DecadeTile taste={taste} tilt={-0.9} delay={0.1} />
+            <PassportTile taste={taste} tilt={1.3} delay={0.15} />
+            <PersonalityTile taste={taste} tilt={-0.7} delay={0.2} />
+          </div>
         </div>
       )}
 
@@ -164,19 +121,10 @@ function Hl({ text, k }: { text: string; k: string }) {
   return (
     <span
       className="rounded-md px-1.5 font-semibold text-ink"
-      style={{ background: `${HEX[pastelFor(k)].fill}` }}
+      style={{ background: HEX[pastelFor(k)].fill }}
     >
       {text}
     </span>
-  );
-}
-
-function CardTitle({ title, hint }: { title: string; hint?: string }) {
-  return (
-    <div className="mb-4">
-      <h2 className="font-display text-2xl font-bold text-ink">{title}</h2>
-      {hint && <p className="mt-0.5 text-xs text-ink-soft">{hint}</p>}
-    </div>
   );
 }
 
@@ -184,11 +132,16 @@ function HubSkeleton() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-14">
       <div className="mb-10 h-14 w-64 skeleton" />
-      <div className="grid gap-6 md:grid-cols-5">
-        <div className="h-96 skeleton rounded-squircle md:col-span-3" />
-        <div className="h-96 skeleton rounded-squircle md:col-span-2" />
-        <div className="h-40 skeleton rounded-squircle md:col-span-2" />
-        <div className="h-40 skeleton rounded-squircle md:col-span-3" />
+      <div className="grid items-start gap-6 md:grid-cols-2">
+        <div className="flex flex-col gap-6">
+          <div className="h-96 skeleton rounded-squircle" />
+          <div className="h-40 skeleton rounded-squircle" />
+        </div>
+        <div className="flex flex-col gap-6">
+          <div className="h-60 skeleton rounded-squircle" />
+          <div className="h-40 skeleton rounded-squircle" />
+          <div className="h-40 skeleton rounded-squircle" />
+        </div>
       </div>
     </main>
   );
