@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.db.base import get_engine
 from app.repositories import taste_repo
-from app.schemas.models import FilmCard, ProfileSummary, TasteProfile
+from app.schemas.models import FilmCard, FilmDatum, ProfileSummary, TasteProfile
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -69,6 +69,18 @@ async def get_taste(profile_id: str) -> TasteProfile:
         top_keywords=row["top_keywords"] or [],
         gaps=row["gaps"] or {},
     )
+
+
+@router.get("/{profile_id}/films")
+async def get_films(profile_id: str) -> list[FilmDatum]:
+    pid = _uuid(profile_id)
+
+    def _read() -> list[dict[str, Any]]:
+        with get_engine().connect() as conn:
+            return taste_repo.load_film_dataset(conn, pid)
+
+    rows = await asyncio.to_thread(_read)
+    return [FilmDatum(**r) for r in rows]
 
 
 @router.get("/{profile_id}/recently-watched")

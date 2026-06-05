@@ -1,5 +1,6 @@
 "use client";
 
+import { useFilter } from "@/components/taste/FilterContext";
 import { GenreBubbles } from "@/components/taste/GenreBubbles";
 import { BrutalCard, BrutalTitle } from "@/components/ui/BrutalCard";
 import { Sparkle, Star } from "@/components/ui/Doodads";
@@ -27,10 +28,17 @@ export function GenreTile({ taste, tilt, delay }: TileProps) {
 
 // ---------- Directors as a film strip ----------
 export function DirectorsTile({ taste, tilt, delay }: TileProps) {
-  const directors = Object.values(taste.directorAffinity)
-    .filter((d) => d.affinity > 0)
-    .sort((a, b) => b.affinity - a.affinity)
-    .slice(0, 6);
+  const { isActive, selection, toggle, top } = useFilter();
+
+  // overview: your top directors by affinity. filtered: the directors *within*
+  // the current slice, ranked by how many of those films they made.
+  const directors: { name: string; count: number }[] = isActive
+    ? top("director", 6).map(([name, count]) => ({ name, count }))
+    : Object.values(taste.directorAffinity)
+        .filter((d) => d.affinity > 0)
+        .sort((a, b) => b.affinity - a.affinity)
+        .slice(0, 6)
+        .map((d) => ({ name: d.name, count: d.count }));
 
   return (
     <motion.div
@@ -42,33 +50,42 @@ export function DirectorsTile({ taste, tilt, delay }: TileProps) {
       className="brutal overflow-hidden rounded-[1.4rem] bg-lilac"
     >
       <h2 className="border-b-[3px] border-ink bg-lilac px-4 py-2 font-display text-xl font-black uppercase text-ink">
-        Directors you adore
+        {isActive ? "Directors here" : "Directors you adore"}
       </h2>
       <div className="flex">
         <Sprockets />
         <ul className="flex-1 space-y-2 py-3">
           {directors.length ? (
-            directors.map((d, i) => (
-              <motion.li
-                key={d.name}
-                initial={{ x: -14, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: (delay ?? 0) + i * 0.07 }}
-                className="brutal-sm flex items-center gap-2 rounded-lg bg-paper px-2 py-1.5"
-              >
-                <span
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-ink text-xs font-black text-ink"
-                  style={{ background: HEX[pastelFor(d.name)].fill }}
+            directors.map((d, i) => {
+              const isSel = selection?.dim === "director" && selection.value === d.name;
+              return (
+                <motion.li
+                  key={d.name}
+                  initial={{ x: -14, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: (delay ?? 0) + i * 0.05 }}
                 >
-                  {i + 1}
-                </span>
-                <span className="flex-1 truncate text-sm font-bold text-ink">{d.name}</span>
-                <span className="text-[11px] font-black text-ink/50">{d.count}</span>
-              </motion.li>
-            ))
+                  <button
+                    type="button"
+                    onClick={() => toggle("director", d.name)}
+                    className={`brutal-sm flex w-full items-center gap-2 rounded-lg px-2 py-1.5 ${isSel ? "bg-butter" : "bg-paper"}`}
+                  >
+                    <span
+                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-ink text-xs font-black text-ink"
+                      style={{ background: HEX[pastelFor(d.name)].fill }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 truncate text-left text-sm font-bold text-ink">
+                      {d.name}
+                    </span>
+                    <span className="text-[11px] font-black text-ink/50">{d.count}</span>
+                  </button>
+                </motion.li>
+              );
+            })
           ) : (
-            <li className="px-3 text-sm text-ink/70">Not enough repeat directors yet.</li>
+            <li className="px-3 text-sm text-ink/70">No directors in this slice.</li>
           )}
         </ul>
         <Sprockets />
@@ -98,6 +115,7 @@ function decadeColor(a: number): string {
 }
 
 export function DecadeTile({ taste, tilt, delay }: TileProps) {
+  const { isActive, selection, toggle, countOf } = useFilter();
   const decades = Object.entries(taste.eraAffinity)
     .map(([d, v]) => ({ decade: Number(d), ...v }))
     .sort((a, b) => a.decade - b.decade);
@@ -111,17 +129,21 @@ export function DecadeTile({ taste, tilt, delay }: TileProps) {
       <div className="grid grid-cols-5 place-items-center gap-x-1 gap-y-3 py-2">
         {decades.map((d, i) => {
           const size = 34 + (d.count / maxCount) * 30;
+          const sliceCount = countOf("decade", String(d.decade));
+          const dimmed = isActive && sliceCount === 0;
+          const isSel = selection?.dim === "decade" && selection.value === String(d.decade);
           return (
-            <motion.div
+            <motion.button
+              type="button"
               key={d.decade}
+              onClick={() => toggle("decade", String(d.decade))}
               initial={{ scale: 0, y: 10 }}
-              whileInView={{ scale: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ scale: 1, y: 0, opacity: dimmed ? 0.3 : 1 }}
               transition={{
                 type: "spring",
                 stiffness: 240,
                 damping: 13,
-                delay: (delay ?? 0) + i * 0.05,
+                delay: (delay ?? 0) + i * 0.04,
               }}
               whileHover={{ scale: 1.12, rotate: -4 }}
               className="flex flex-col items-center gap-1"
@@ -129,12 +151,17 @@ export function DecadeTile({ taste, tilt, delay }: TileProps) {
             >
               <span
                 className="brutal-sm grid place-items-center rounded-full text-[10px] font-black text-ink"
-                style={{ width: size, height: size, background: decadeColor(d.affinity) }}
+                style={{
+                  width: size,
+                  height: size,
+                  background: decadeColor(d.affinity),
+                  boxShadow: isSel ? "0 0 0 3px #3B322C, 3px 3px 0 0 #3B322C" : undefined,
+                }}
               >
-                {d.count}
+                {isActive ? sliceCount : d.count}
               </span>
               <span className="text-[11px] font-black text-ink/70">{`'${String(d.decade).slice(2)}`}</span>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -144,6 +171,7 @@ export function DecadeTile({ taste, tilt, delay }: TileProps) {
 
 // ---------- Countries as postage stamps ----------
 export function PassportTile({ taste, tilt, delay }: TileProps) {
+  const { isActive, selection, toggle, countOf } = useFilter();
   const countries = Object.entries(taste.countryAffinity)
     .map(([cc, v]) => ({ cc, ...v }))
     .filter((c) => c.count >= 2)
@@ -156,38 +184,45 @@ export function PassportTile({ taste, tilt, delay }: TileProps) {
         Film passport
       </BrutalTitle>
       <div className="flex flex-wrap gap-2.5">
-        {countries.map((c, i) => (
-          <motion.div
-            key={c.cc}
-            initial={{ scale: 0, rotate: -10 }}
-            whileInView={{ scale: 1, rotate: (i % 3) - 1 }}
-            viewport={{ once: true }}
-            transition={{
-              type: "spring",
-              stiffness: 260,
-              damping: 13,
-              delay: (delay ?? 0) + i * 0.05,
-            }}
-            whileHover={{ rotate: 0, scale: 1.08, y: -3 }}
-            className="brutal-sm w-[4.7rem] overflow-hidden rounded-[5px] bg-paper text-center"
-          >
-            <div
-              className="border-b-2 border-dashed border-ink/40 py-1.5 text-2xl leading-none"
-              style={{ background: HEX[pastelFor(c.cc)].fill }}
+        {countries.map((c, i) => {
+          const sliceCount = countOf("country", c.cc);
+          const dimmed = isActive && sliceCount === 0;
+          const isSel = selection?.dim === "country" && selection.value === c.cc;
+          return (
+            <motion.button
+              type="button"
+              key={c.cc}
+              onClick={() => toggle("country", c.cc)}
+              initial={{ scale: 0, rotate: -10 }}
+              animate={{ scale: 1, rotate: (i % 3) - 1, opacity: dimmed ? 0.3 : 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 13,
+                delay: (delay ?? 0) + i * 0.04,
+              }}
+              whileHover={{ rotate: 0, scale: 1.08, y: -3 }}
+              className="brutal-sm w-[4.7rem] overflow-hidden rounded-[5px] bg-paper text-center"
+              style={{ boxShadow: isSel ? "0 0 0 3px #3B322C, 3px 3px 0 0 #3B322C" : undefined }}
             >
-              {flag(c.cc)}
-            </div>
-            <div className="px-1 py-1">
-              <div className="text-[11px] font-black leading-tight text-ink">
-                {countryName(c.cc)}
+              <div
+                className="border-b-2 border-dashed border-ink/40 py-1.5 text-2xl leading-none"
+                style={{ background: HEX[pastelFor(c.cc)].fill }}
+              >
+                {flag(c.cc)}
               </div>
-              <div className="text-[10px] font-bold text-ink/50">
-                {c.count}
-                {c.affinity > 0.2 ? " ♥" : ""}
+              <div className="px-1 py-1">
+                <div className="text-[11px] font-black leading-tight text-ink">
+                  {countryName(c.cc)}
+                </div>
+                <div className="text-[10px] font-bold text-ink/50">
+                  {isActive ? sliceCount : c.count}
+                  {!isActive && c.affinity > 0.2 ? " ♥" : ""}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.button>
+          );
+        })}
       </div>
     </BrutalCard>
   );
@@ -195,6 +230,36 @@ export function PassportTile({ taste, tilt, delay }: TileProps) {
 
 // ---------- Personality gauge rings ----------
 export function PersonalityTile({ taste, tilt, delay }: TileProps) {
+  const { isActive, filtered, totalFilms } = useFilter();
+
+  if (isActive) {
+    const rated = filtered.filter((f) => f.rating != null);
+    const avgRating = rated.length
+      ? rated.reduce((s, f) => s + (f.rating ?? 0), 0) / rated.length
+      : 0;
+    const withRt = filtered.filter((f) => f.runtimeMin);
+    const avgRt = withRt.length
+      ? withRt.reduce((s, f) => s + (f.runtimeMin ?? 0), 0) / withRt.length
+      : 0;
+    return (
+      <BrutalCard bg="blush" pattern="stripes" tilt={tilt} delay={delay}>
+        <BrutalTitle>This slice</BrutalTitle>
+        <div className="flex items-start justify-around gap-2">
+          <Ring value={filtered.length} max={totalFilms} unit="" label="films" pastel="peach" />
+          <Ring
+            value={avgRating}
+            max={10}
+            unit="/10"
+            label="you rate"
+            pastel="butter"
+            decimals={1}
+          />
+          <Ring value={avgRt} max={200} unit="m" label="avg length" pastel="mint" />
+        </div>
+      </BrutalCard>
+    );
+  }
+
   const rt = taste.runtimePref?.pref_min ?? null;
   const runtimeLabel =
     rt == null
@@ -287,6 +352,7 @@ function Ring({
 
 // ---------- Themes as a tag pile ----------
 export function ThemesTile({ taste, tilt, delay }: TileProps) {
+  const { isActive, selection, toggle, countOf } = useFilter();
   const kws = taste.topKeywords.slice(0, 16);
   const maxW = Math.max(...kws.map((k) => k.weight), 0.01);
   return (
@@ -301,12 +367,15 @@ export function ThemesTile({ taste, tilt, delay }: TileProps) {
           const p = pastelFor(k.name);
           let h = 0;
           for (const ch of k.name) h += ch.charCodeAt(0);
+          const dimmed = isActive && countOf("theme", k.name) === 0;
+          const isSel = selection?.dim === "theme" && selection.value === k.name;
           return (
-            <motion.span
+            <motion.button
+              type="button"
               key={k.id}
+              onClick={() => toggle("theme", k.name)}
               initial={{ scale: 0, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1, rotate: (h % 9) - 4 }}
-              viewport={{ once: true }}
+              animate={{ scale: 1, opacity: dimmed ? 0.3 : 1, rotate: (h % 9) - 4 }}
               transition={{
                 type: "spring",
                 stiffness: 300,
@@ -314,11 +383,16 @@ export function ThemesTile({ taste, tilt, delay }: TileProps) {
                 delay: (delay ?? 0) + i * 0.03,
               }}
               whileHover={{ rotate: 0, scale: 1.12 }}
-              className="brutal-sm inline-block cursor-default rounded-full px-3 py-1 font-black"
-              style={{ background: HEX[p].fill, color: HEX[p].deep, fontSize: 12 + t * 10 }}
+              className="brutal-sm inline-block rounded-full px-3 py-1 font-black"
+              style={{
+                background: HEX[p].fill,
+                color: HEX[p].deep,
+                fontSize: 12 + t * 10,
+                boxShadow: isSel ? "0 0 0 3px #3B322C, 3px 3px 0 0 #3B322C" : undefined,
+              }}
             >
               {k.name}
-            </motion.span>
+            </motion.button>
           );
         })}
       </div>

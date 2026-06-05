@@ -4,6 +4,7 @@
 // so nothing stretches into empty space. Recently-watched omitted (lives on
 // Letterboxd).
 
+import { FilterBanner, FilterProvider } from "@/components/taste/FilterContext";
 import {
   DecadeTile,
   DiggingTile,
@@ -17,8 +18,10 @@ import { FloatingShapes } from "@/components/ui/FloatingShapes";
 import { Marquee } from "@/components/ui/Marquee";
 import { PaperCard } from "@/components/ui/PaperCard";
 import {
+  type FilmDatum,
   type ProfileSummary,
   type TasteProfile,
+  getFilms,
   getProfileSummary,
   getTasteProfile,
 } from "@/lib/api";
@@ -31,15 +34,18 @@ export default function ProfileHubPage() {
   const { profile } = useParams<{ profile: string }>();
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [taste, setTaste] = useState<TasteProfile | null>(null);
+  const [films, setFilms] = useState<FilmDatum[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       getProfileSummary(profile).catch(() => null),
       getTasteProfile(profile).catch(() => null),
-    ]).then(([s, t]) => {
+      getFilms(profile).catch(() => [] as FilmDatum[]),
+    ]).then(([s, t, f]) => {
       setSummary(s);
       setTaste(t);
+      setFilms(f);
       setLoading(false);
     });
   }, [profile]);
@@ -123,20 +129,26 @@ export default function ProfileHubPage() {
             </p>
           </PaperCard>
         ) : (
-          <div className="md:columns-2 xl:columns-3 [column-gap:1.25rem]">
-            {tiles.map((tile, i) => (
-              <div
-                key={tile.key}
-                className="mb-5 break-inside-avoid animate-float"
-                style={{
-                  animationDelay: `${(i % 5) * 0.6}s`,
-                  animationDuration: `${7 + (i % 3)}s`,
-                }}
-              >
-                {tile.el}
-              </div>
-            ))}
-          </div>
+          <FilterProvider films={films}>
+            <FilterBanner />
+            <p className="mb-4 text-sm font-bold text-ink/50">
+              ✦ tap any genre, director, decade, country or theme to filter your whole map ✦
+            </p>
+            <div className="md:columns-2 xl:columns-3 [column-gap:1.25rem]">
+              {tiles.map((tile, i) => (
+                <div
+                  key={tile.key}
+                  className="mb-5 break-inside-avoid animate-float"
+                  style={{
+                    animationDelay: `${(i % 5) * 0.6}s`,
+                    animationDuration: `${7 + (i % 3)}s`,
+                  }}
+                >
+                  {tile.el}
+                </div>
+              ))}
+            </div>
+          </FilterProvider>
         )}
 
         <p className="mt-12 text-center text-base font-black uppercase tracking-wide text-ink/40">

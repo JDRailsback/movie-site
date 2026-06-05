@@ -93,6 +93,23 @@ class FilmCard(ApiModel):
     streaming: list[StreamingOffer] = Field(default_factory=list)
 
 
+class FilmDatum(ApiModel):
+    """One watched film with its attributes — powers client-side cross-filtering."""
+
+    tmdb_id: int
+    title: str
+    year: int | None = None
+    decade: int | None = None
+    poster_path: str | None = None
+    runtime_min: int | None = None
+    rating: int | None = None
+    liked: bool = False
+    genres: list[str] = Field(default_factory=list)
+    directors: list[str] = Field(default_factory=list)
+    countries: list[str] = Field(default_factory=list)
+    themes: list[str] = Field(default_factory=list)
+
+
 class Explanation(ApiModel):
     source: str
     reasons: list[str] = Field(default_factory=list)

@@ -1,19 +1,20 @@
 "use client";
 
+import { useFilter } from "@/components/taste/FilterContext";
 import type { GenreAffinity } from "@/lib/api";
 import { HEX, pastelFor } from "@/lib/pastels";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
 
 const MUTED = "#D9C7BB";
 
-// Genres as a pile of ink-outlined bubbles, sized by how much you love them.
-// Laid out with flex-wrap (no absolute positioning) so nothing overlaps or
-// clips. Tap a bubble to unfurl the four signals behind it.
+// Genre bubbles drive the cross-filter: tapping one filters the whole hub to
+// your films in that genre (and unfurls its four signals). Sized by affinity;
+// faded when out of the active slice.
 export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity> }) {
   const rows = Object.values(genres).sort((a, b) => b.affinity - a.affinity);
-  const [sel, setSel] = useState<string | null>(null);
-  const selected = rows.find((r) => r.name === sel) ?? null;
+  const { selection, isActive, toggle, countOf } = useFilter();
+  const selectedGenre = selection?.dim === "genre" ? selection.value : null;
+  const selected = rows.find((r) => r.name === selectedGenre) ?? null;
 
   return (
     <div>
@@ -26,7 +27,9 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
           let h = 0;
           for (const c of g.name) h += c.charCodeAt(0);
           const tilt = (h % 9) - 4;
-          const isSel = g.name === sel;
+          const count = countOf("genre", g.name);
+          const dimmed = isActive && count === 0;
+          const isSel = g.name === selectedGenre;
           return (
             <span
               key={g.name}
@@ -35,10 +38,11 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
             >
               <motion.button
                 type="button"
-                onClick={() => setSel(isSel ? null : g.name)}
+                onClick={() => toggle("genre", g.name)}
                 initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1, rotate: tilt }}
+                whileInView={{ scale: 1, opacity: dimmed ? 0.28 : 1, rotate: tilt }}
                 viewport={{ once: true }}
+                animate={{ opacity: dimmed ? 0.28 : 1 }}
                 transition={{ type: "spring", stiffness: 280, damping: 14, delay: i * 0.03 }}
                 whileHover={{ rotate: 0, scale: 1.15, zIndex: 5 }}
                 className="brutal-sm grid place-items-center rounded-full leading-none"
@@ -56,8 +60,9 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
                   {g.name}
                   {size > 58 && (
                     <span className="block text-[9px] font-black opacity-60">
-                      {g.affinity >= 0 ? "+" : ""}
-                      {g.affinity.toFixed(2)}
+                      {isActive
+                        ? `${count}`
+                        : `${g.affinity >= 0 ? "+" : ""}${g.affinity.toFixed(2)}`}
                     </span>
                   )}
                 </span>
@@ -89,7 +94,7 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
           </motion.div>
         ) : (
           <p className="mt-3 text-center text-xs font-bold text-ink/50">
-            ▸ tap a bubble for the why
+            ▸ tap a genre to filter your whole map
           </p>
         )}
       </AnimatePresence>

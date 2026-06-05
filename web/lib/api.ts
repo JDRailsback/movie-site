@@ -120,8 +120,27 @@ export interface FilmCard {
   yourRating?: number | null;
 }
 
+export interface FilmDatum {
+  tmdbId: number;
+  title: string;
+  year?: number | null;
+  decade?: number | null;
+  posterPath?: string | null;
+  runtimeMin?: number | null;
+  rating?: number | null;
+  liked: boolean;
+  genres: string[];
+  directors: string[];
+  countries: string[];
+  themes: string[];
+}
+
 export async function getProfileSummary(profileId: string): Promise<ProfileSummary> {
   return unwrap<ProfileSummary>(await fetch(`${API_BASE}/profiles/${profileId}`));
+}
+
+export async function getFilms(profileId: string): Promise<FilmDatum[]> {
+  return unwrap<FilmDatum[]>(await fetch(`${API_BASE}/profiles/${profileId}/films`));
 }
 
 export async function getTasteProfile(profileId: string): Promise<TasteProfile | null> {
