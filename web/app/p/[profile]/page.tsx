@@ -7,7 +7,6 @@
 import { FilterBanner, FilterProvider } from "@/components/taste/FilterContext";
 import {
   DecadeTile,
-  DiggingTile,
   DirectorsTile,
   GenreTile,
   PassportTile,
@@ -69,7 +68,6 @@ export default function ProfileHubPage() {
         { key: "c", el: <DecadeTile taste={taste} tilt={2} /> },
         { key: "p", el: <PassportTile taste={taste} tilt={-2} /> },
         { key: "v", el: <PersonalityTile taste={taste} tilt={2.5} /> },
-        { key: "w", el: <DiggingTile taste={taste} tilt={-2} /> },
       ]
     : [];
 
