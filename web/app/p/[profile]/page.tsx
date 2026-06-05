@@ -83,14 +83,14 @@ export default function ProfileHubPage() {
   ].filter(Boolean) as string[];
 
   return (
-    <main className="relative min-h-screen w-full overflow-x-hidden pb-20">
+    <main className="relative min-h-screen w-full overflow-x-clip pb-20">
       <FloatingShapes />
 
-      <div className="mb-8">
+      <div className="sticky top-0 z-40">
         <Marquee items={marquee} />
       </div>
 
-      <div className="mx-auto max-w-[1380px] px-6 sm:px-10 lg:px-16">
+      <div className="mx-auto max-w-[1380px] px-6 pt-8 sm:px-10 lg:px-16">
         <header className="mb-8">
           <motion.span
             initial={{ scale: 0, rotate: -12 }}

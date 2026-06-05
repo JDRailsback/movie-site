@@ -70,7 +70,7 @@ const config: Config = {
         breathe: "breathe 4s ease-in-out infinite",
         pop: "pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both",
         jiggle: "jiggle 2.4s ease-in-out infinite",
-        marquee: "marquee 22s linear infinite",
+        marquee: "marquee 48s linear infinite",
         wobble: "wobble 7s ease-in-out infinite",
         "spin-slow": "spin 16s linear infinite",
       },

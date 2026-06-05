@@ -54,7 +54,7 @@ export function DirectorsTile({ taste, tilt, delay }: TileProps) {
       </h2>
       <div className="flex">
         <Sprockets />
-        <ul className="flex-1 space-y-2 py-3">
+        <ul className="min-h-[18rem] flex-1 space-y-2 py-3">
           {directors.length ? (
             directors.map((d, i) => {
               const isSel = selection?.dim === "director" && selection.value === d.name;

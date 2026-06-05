@@ -72,32 +72,36 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
         })}
       </div>
 
-      <AnimatePresence mode="wait">
-        {selected ? (
-          <motion.div
-            key={selected.name}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="brutal-sm mt-3 rounded-xl bg-paper p-3"
-          >
-            <p className="mb-2 font-display text-base font-black uppercase text-ink">
-              {selected.name}{" "}
-              <span className="text-xs font-bold normal-case text-ink/60">
-                · {selected.count} films · {selected.avg_rating.toFixed(1)}/10
-              </span>
+      {/* fixed-height region so selecting a genre never changes the tile height
+          (which would reshuffle the masonry layout) */}
+      <div className="mt-3 min-h-[156px]">
+        <AnimatePresence mode="wait">
+          {selected ? (
+            <motion.div
+              key={selected.name}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="brutal-sm rounded-xl bg-paper p-3"
+            >
+              <p className="mb-2 font-display text-base font-black uppercase text-ink">
+                {selected.name}{" "}
+                <span className="text-xs font-bold normal-case text-ink/60">
+                  · {selected.count} films · {selected.avg_rating.toFixed(1)}/10
+                </span>
+              </p>
+              <Signal label="Rating vs. your average" v={selected.components.rating} />
+              <Signal label="vs. the crowd" v={selected.components.vs_audience} />
+              <Signal label="How often you watch it" v={selected.components.engagement} />
+              <Signal label="How often you ♥ it" v={selected.components.likes} />
+            </motion.div>
+          ) : (
+            <p className="pt-6 text-center text-xs font-bold text-ink/50">
+              ▸ tap a genre to filter your whole map
             </p>
-            <Signal label="Rating vs. your average" v={selected.components.rating} />
-            <Signal label="vs. the crowd" v={selected.components.vs_audience} />
-            <Signal label="How often you watch it" v={selected.components.engagement} />
-            <Signal label="How often you ♥ it" v={selected.components.likes} />
-          </motion.div>
-        ) : (
-          <p className="mt-3 text-center text-xs font-bold text-ink/50">
-            ▸ tap a genre to filter your whole map
-          </p>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
