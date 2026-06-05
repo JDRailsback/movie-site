@@ -23,7 +23,7 @@ def test_openapi_exports_contract() -> None:
 
 
 def test_stub_returns_501() -> None:
-    # recommendations remain a Phase-2 stub; the surface should be honest.
-    r = client.get("/profiles/00000000-0000-0000-0000-000000000000/recs/blind_spots")
+    # sharing remains a Phase-3 stub; the surface should be honest.
+    r = client.get("/share/whatever")
     assert r.status_code == 501
     assert r.json()["detail"]["error"]["code"] == "not_implemented"

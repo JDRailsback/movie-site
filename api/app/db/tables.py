@@ -163,6 +163,16 @@ title_crosswalk = Table(
     Column("source", Text),
 )
 
+user_feedback = Table(
+    "user_feedback",
+    metadata,
+    Column("profile_id", Uuid, primary_key=True),
+    Column("film_id", Integer, primary_key=True),
+    Column("action", Text, primary_key=True),
+    Column("surface", Text),
+    Column("created_at", TIMESTAMP(timezone=True)),
+)
+
 # taste_profile: taste_vector (halfvec) is intentionally omitted here — it's
 # written in Phase 2 and select() must not pull a type the Core layer can't map.
 taste_profile = Table(
