@@ -57,13 +57,13 @@ export default function ProfileHubPage() {
 
   const tiles = taste
     ? [
-        { key: "g", el: <GenreTile taste={taste} tilt={-1.2} /> },
-        { key: "d", el: <DirectorsTile taste={taste} tilt={1.4} /> },
-        { key: "t", el: <ThemesTile taste={taste} tilt={-1.6} /> },
-        { key: "c", el: <DecadeTile taste={taste} tilt={1.2} /> },
-        { key: "p", el: <PassportTile taste={taste} tilt={-1.3} /> },
-        { key: "v", el: <PersonalityTile taste={taste} tilt={1.5} /> },
-        { key: "w", el: <DiggingTile taste={taste} tilt={-1} /> },
+        { key: "g", el: <GenreTile taste={taste} tilt={-2} /> },
+        { key: "d", el: <DirectorsTile taste={taste} tilt={2.5} /> },
+        { key: "t", el: <ThemesTile taste={taste} tilt={-2.5} /> },
+        { key: "c", el: <DecadeTile taste={taste} tilt={2} /> },
+        { key: "p", el: <PassportTile taste={taste} tilt={-2} /> },
+        { key: "v", el: <PersonalityTile taste={taste} tilt={2.5} /> },
+        { key: "w", el: <DiggingTile taste={taste} tilt={-2} /> },
       ]
     : [];
 
@@ -84,7 +84,7 @@ export default function ProfileHubPage() {
         <Marquee items={marquee} />
       </div>
 
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6">
+      <div className="mx-auto max-w-[1380px] px-6 sm:px-10 lg:px-16">
         <header className="mb-8">
           <motion.span
             initial={{ scale: 0, rotate: -12 }}

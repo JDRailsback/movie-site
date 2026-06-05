@@ -210,7 +210,7 @@ export function PersonalityTile({ taste, tilt, delay }: TileProps) {
     taste.mu >= 7.2 ? "generous" : taste.mu <= 5.8 ? "tough crowd" : "even-handed";
 
   return (
-    <BrutalCard bg="blush" pattern="stripes" shape="blob2" tilt={tilt} delay={delay}>
+    <BrutalCard bg="blush" pattern="stripes" tilt={tilt} delay={delay}>
       <BrutalTitle>Viewing personality</BrutalTitle>
       <div className="flex items-start justify-around gap-2">
         <Ring value={rt ?? 0} max={200} unit="m" label={runtimeLabel} pastel="peach" />

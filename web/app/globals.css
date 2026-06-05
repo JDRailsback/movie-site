@@ -7,11 +7,11 @@ body {
   /* colourful pastel wash filling the whole screen + a dot grid on top */
   background-color: #fbf6ec;
   background-image: radial-gradient(rgba(59, 50, 44, 0.07) 1.5px, transparent 1.6px),
-    radial-gradient(circle at 12% 18%, rgba(216, 204, 239, 0.55), transparent 38%),
-    radial-gradient(circle at 88% 12%, rgba(194, 230, 205, 0.55), transparent 38%),
-    radial-gradient(circle at 82% 82%, rgba(251, 217, 180, 0.6), transparent 40%),
-    radial-gradient(circle at 16% 86%, rgba(247, 201, 210, 0.6), transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(191, 220, 236, 0.35), transparent 55%);
+    radial-gradient(circle at 12% 18%, rgba(159, 134, 226, 0.4), transparent 40%),
+    radial-gradient(circle at 88% 12%, rgba(93, 197, 156, 0.4), transparent 40%),
+    radial-gradient(circle at 82% 82%, rgba(246, 162, 79, 0.42), transparent 42%),
+    radial-gradient(circle at 16% 86%, rgba(244, 154, 193, 0.42), transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(111, 172, 218, 0.28), transparent 55%);
   background-size: 15px 15px, auto, auto, auto, auto, auto;
   background-attachment: fixed;
 }

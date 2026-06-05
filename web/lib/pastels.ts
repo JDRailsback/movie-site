@@ -47,11 +47,11 @@ export const RING_DEEP: Record<Pastel, string> = {
 
 // Soft fill hex (for inline styles where a gradient/border is needed)
 export const HEX: Record<Pastel, { fill: string; deep: string }> = {
-  blush: { fill: "#F7C9D2", deep: "#D77A8E" },
-  peach: { fill: "#FBD9B4", deep: "#E0964F" },
-  butter: { fill: "#F7E6A0", deep: "#C9A52E" },
-  mint: { fill: "#C2E6CD", deep: "#5FA87C" },
-  sky: { fill: "#BFDCEC", deep: "#5C97BD" },
-  lilac: { fill: "#D8CCEF", deep: "#8C76C9" },
-  coral: { fill: "#F6AE96", deep: "#DC6A4B" },
+  blush: { fill: "#F49AC1", deep: "#BE4A77" },
+  peach: { fill: "#F6A24F", deep: "#BD5A14" },
+  butter: { fill: "#F3C53A", deep: "#A87E0E" },
+  mint: { fill: "#5DC59C", deep: "#207C5E" },
+  sky: { fill: "#6FACDA", deep: "#2C6694" },
+  lilac: { fill: "#9F86E2", deep: "#523BB4" },
+  coral: { fill: "#F26B45", deep: "#B83216" },
 };
