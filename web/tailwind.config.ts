@@ -50,6 +50,18 @@ const config: Config = {
           "70%": { transform: "scale(1.08)" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
+        jiggle: {
+          "0%,100%": { transform: "rotate(-3deg)" },
+          "50%": { transform: "rotate(3deg)" },
+        },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
+        wobble: {
+          "0%,100%": { transform: "translateY(0) rotate(-1.5deg)" },
+          "50%": { transform: "translateY(-10px) rotate(1.5deg)" },
+        },
       },
       animation: {
         float: "float 6s ease-in-out infinite",
@@ -57,6 +69,10 @@ const config: Config = {
         wiggle: "wiggle 0.4s ease-in-out",
         breathe: "breathe 4s ease-in-out infinite",
         pop: "pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both",
+        jiggle: "jiggle 2.4s ease-in-out infinite",
+        marquee: "marquee 22s linear infinite",
+        wobble: "wobble 7s ease-in-out infinite",
+        "spin-slow": "spin 16s linear infinite",
       },
     },
   },

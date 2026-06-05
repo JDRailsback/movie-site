@@ -18,7 +18,7 @@ interface TileProps {
 export function GenreTile({ taste, tilt, delay }: TileProps) {
   return (
     <BrutalCard bg="peach" pattern="dots" tilt={tilt} delay={delay}>
-      <Star className="absolute -right-3 -top-3 text-4xl drop-shadow" />
+      <Star className="absolute -right-3 -top-3 animate-spin-slow text-4xl drop-shadow" />
       <BrutalTitle hint="Bigger = you love it more.">Genre galaxy</BrutalTitle>
       <GenreBubbles genres={taste.genreAffinity} />
     </BrutalCard>
@@ -210,7 +210,7 @@ export function PersonalityTile({ taste, tilt, delay }: TileProps) {
     taste.mu >= 7.2 ? "generous" : taste.mu <= 5.8 ? "tough crowd" : "even-handed";
 
   return (
-    <BrutalCard bg="blush" pattern="stripes" tilt={tilt} delay={delay}>
+    <BrutalCard bg="blush" pattern="stripes" shape="blob2" tilt={tilt} delay={delay}>
       <BrutalTitle>Viewing personality</BrutalTitle>
       <div className="flex items-start justify-around gap-2">
         <Ring value={rt ?? 0} max={200} unit="m" label={runtimeLabel} pastel="peach" />
@@ -290,8 +290,8 @@ export function ThemesTile({ taste, tilt, delay }: TileProps) {
   const kws = taste.topKeywords.slice(0, 16);
   const maxW = Math.max(...kws.map((k) => k.weight), 0.01);
   return (
-    <BrutalCard bg="butter" pattern="dots" tilt={tilt} delay={delay}>
-      <Sparkle className="absolute -left-2 -top-3 text-3xl" />
+    <BrutalCard bg="butter" pattern="dots" shape="blob" tilt={tilt} delay={delay}>
+      <Sparkle className="absolute -left-2 -top-3 text-3xl animate-spin-slow" />
       <BrutalTitle hint="The threads running through your favourites — bigger = stronger.">
         Your themes
       </BrutalTitle>

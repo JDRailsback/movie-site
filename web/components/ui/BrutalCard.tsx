@@ -18,6 +18,7 @@ export function BrutalCard({
   children,
   bg = "blush",
   pattern = "none",
+  shape = "squircle",
   tilt = 0,
   delay = 0,
   className = "",
@@ -25,20 +26,23 @@ export function BrutalCard({
   children: ReactNode;
   bg?: Pastel;
   pattern?: "dots" | "stripes" | "checks" | "grid" | "none";
+  shape?: "squircle" | "blob" | "blob2";
   tilt?: number;
   delay?: number;
   className?: string;
 }) {
+  const radius =
+    shape === "blob" ? "rounded-blob" : shape === "blob2" ? "rounded-blob2" : "rounded-[1.4rem]";
   return (
     <motion.section
-      initial={{ y: 22, opacity: 0, rotate: tilt }}
-      whileInView={{ y: 0, opacity: 1, rotate: tilt }}
+      initial={{ y: 26, opacity: 0, rotate: tilt, scale: 0.9 }}
+      whileInView={{ y: 0, opacity: 1, rotate: tilt, scale: 1 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ type: "spring", stiffness: 130, damping: 14, delay }}
-      whileHover={{ rotate: 0, y: -3, boxShadow: "9px 9px 0 0 #3B322C" }}
-      className={`brutal relative rounded-[1.4rem] ${BG[bg]} p-5 ${className}`}
+      transition={{ type: "spring", stiffness: 140, damping: 13, delay }}
+      whileHover={{ rotate: 0, y: -4, scale: 1.02, boxShadow: "10px 10px 0 0 #3B322C" }}
+      className={`brutal relative ${radius} ${BG[bg]} p-5 ${className}`}
     >
-      <div className={`pointer-events-none absolute inset-0 rounded-[1.2rem] ${PAT[pattern]}`} />
+      <div className={`pointer-events-none absolute inset-0 rounded-[inherit] ${PAT[pattern]}`} />
       <div className="relative">{children}</div>
     </motion.section>
   );

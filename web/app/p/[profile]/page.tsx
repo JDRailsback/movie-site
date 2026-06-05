@@ -14,8 +14,8 @@ import {
   ThemesTile,
 } from "@/components/taste/Tiles";
 import { FloatingShapes } from "@/components/ui/FloatingShapes";
+import { Marquee } from "@/components/ui/Marquee";
 import { PaperCard } from "@/components/ui/PaperCard";
-import { Sticker } from "@/components/ui/Sticker";
 import {
   type ProfileSummary,
   type TasteProfile,
@@ -55,68 +55,94 @@ export default function ProfileHubPage() {
   const topGenre = genres[0]?.name;
   const topDirector = directors.filter((d) => d.affinity > 0)[0]?.name;
 
+  const tiles = taste
+    ? [
+        { key: "g", el: <GenreTile taste={taste} tilt={-1.2} /> },
+        { key: "d", el: <DirectorsTile taste={taste} tilt={1.4} /> },
+        { key: "t", el: <ThemesTile taste={taste} tilt={-1.6} /> },
+        { key: "c", el: <DecadeTile taste={taste} tilt={1.2} /> },
+        { key: "p", el: <PassportTile taste={taste} tilt={-1.3} /> },
+        { key: "v", el: <PersonalityTile taste={taste} tilt={1.5} /> },
+        { key: "w", el: <DiggingTile taste={taste} tilt={-1} /> },
+      ]
+    : [];
+
+  const marquee = [
+    "Your taste map",
+    `${summary?.filmCount ?? ""} films`,
+    topGenre ? `${topGenre} lover` : "",
+    topDirector ?? "",
+    "Now showing",
+    "Reel",
+  ].filter(Boolean) as string[];
+
   return (
-    <main className="relative mx-auto max-w-5xl px-6 py-14">
+    <main className="relative min-h-screen w-full overflow-x-hidden pb-20">
       <FloatingShapes />
 
-      <header className="mb-10">
-        <span className="brutal-sm inline-block -rotate-2 rounded-full bg-mint px-3 py-1 text-xs font-black uppercase tracking-widest text-ink">
-          ✦ Your taste map ✦
-        </span>
-        <h1 className="mt-3 inline-block font-display text-6xl font-black uppercase text-ink [text-shadow:3px_3px_0_#F6AE96,5px_5px_0_#3B322C]">
-          {summary?.displayName ?? summary?.username ?? "You"}
-        </h1>
-        {taste && topGenre && (
-          <p className="mt-4 max-w-xl text-xl font-semibold text-ink">
-            You light up for <Hl text={topGenre} k={topGenre} />
-            {topDirector ? (
-              <>
-                {" "}
-                and anything by <Hl text={topDirector} k={topDirector} />
-              </>
-            ) : null}
-            .
-          </p>
-        )}
-        {summary && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Sticker label={`${summary.filmCount} films`} pastel="sky" index={0} />
+      <div className="mb-8">
+        <Marquee items={marquee} />
+      </div>
+
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6">
+        <header className="mb-8">
+          <motion.span
+            initial={{ scale: 0, rotate: -12 }}
+            animate={{ scale: 1, rotate: -3 }}
+            transition={{ type: "spring", stiffness: 240, damping: 12 }}
+            className="brutal-sm inline-block rounded-full bg-mint px-3 py-1 text-xs font-black uppercase tracking-widest text-ink"
+          >
+            ✦ Your taste map ✦
+          </motion.span>
+          <motion.h1
+            initial={{ y: 30, opacity: 0, rotate: -3 }}
+            animate={{ y: 0, opacity: 1, rotate: -1.5 }}
+            transition={{ type: "spring", stiffness: 130, damping: 11 }}
+            className="mt-3 inline-block font-display text-7xl font-black uppercase leading-none text-ink [text-shadow:4px_4px_0_#F6AE96,7px_7px_0_#3B322C] sm:text-8xl"
+          >
+            {summary?.displayName ?? summary?.username ?? "You"}
+          </motion.h1>
+          {taste && topGenre && (
+            <p className="mt-5 max-w-2xl text-2xl font-bold text-ink">
+              You light up for <Hl text={topGenre} k={topGenre} />
+              {topDirector ? (
+                <>
+                  {" "}
+                  and anything by <Hl text={topDirector} k={topDirector} />
+                </>
+              ) : null}
+              .
+            </p>
+          )}
+        </header>
+
+        {!taste ? (
+          <PaperCard>
+            <p className="text-ink-soft">
+              Your taste map is still being drawn — refresh in a moment.
+            </p>
+          </PaperCard>
+        ) : (
+          <div className="md:columns-2 xl:columns-3 [column-gap:1.25rem]">
+            {tiles.map((tile, i) => (
+              <div
+                key={tile.key}
+                className="mb-5 break-inside-avoid animate-float"
+                style={{
+                  animationDelay: `${(i % 5) * 0.6}s`,
+                  animationDuration: `${7 + (i % 3)}s`,
+                }}
+              >
+                {tile.el}
+              </div>
+            ))}
           </div>
         )}
-      </header>
 
-      {!taste ? (
-        <PaperCard>
-          <p className="text-ink-soft">
-            Your taste map is still being drawn — refresh in a moment.
-          </p>
-        </PaperCard>
-      ) : (
-        <div className="md:columns-2 [column-gap:1.5rem]">
-          {[
-            <GenreTile key="g" taste={taste} tilt={-0.8} />,
-            <DirectorsTile key="d" taste={taste} tilt={1.1} />,
-            <ThemesTile key="t" taste={taste} tilt={-1.2} />,
-            <DecadeTile key="c" taste={taste} tilt={-0.9} />,
-            <PassportTile key="p" taste={taste} tilt={1.3} />,
-            <PersonalityTile key="v" taste={taste} tilt={-0.7} />,
-            <DiggingTile key="w" taste={taste} tilt={0.8} />,
-          ].map((tile) => (
-            <div key={tile.key} className="mb-6 break-inside-avoid">
-              {tile}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="mt-10 text-center text-sm text-ink-faint"
-      >
-        Recommendations — blind spots, hidden gems, director rabbit holes — are coming next.
-      </motion.p>
+        <p className="mt-12 text-center text-base font-black uppercase tracking-wide text-ink/40">
+          ✦ Recs — blind spots · hidden gems · rabbit holes — coming next ✦
+        </p>
+      </div>
     </main>
   );
 }

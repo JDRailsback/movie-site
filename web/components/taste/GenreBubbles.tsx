@@ -28,36 +28,41 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
           const tilt = (h % 9) - 4;
           const isSel = g.name === sel;
           return (
-            <motion.button
-              type="button"
+            <span
               key={g.name}
-              onClick={() => setSel(isSel ? null : g.name)}
-              initial={{ scale: 0, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1, rotate: tilt }}
-              viewport={{ once: true }}
-              transition={{ type: "spring", stiffness: 280, damping: 14, delay: i * 0.03 }}
-              whileHover={{ rotate: 0, scale: 1.1, zIndex: 5 }}
-              className="brutal-sm grid place-items-center rounded-full leading-none"
-              style={{
-                width: size,
-                height: size,
-                background: fill,
-                boxShadow: isSel ? "0 0 0 3px #3B322C, 4px 4px 0 0 #3B322C" : undefined,
-              }}
+              className="inline-block animate-float"
+              style={{ animationDelay: `${(i % 7) * 0.5}s`, animationDuration: `${5 + (i % 4)}s` }}
             >
-              <span
-                className="px-1 text-center font-extrabold leading-tight text-ink"
-                style={{ fontSize: size > 80 ? 13 : size > 58 ? 11 : 9.5 }}
+              <motion.button
+                type="button"
+                onClick={() => setSel(isSel ? null : g.name)}
+                initial={{ scale: 0, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1, rotate: tilt }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 280, damping: 14, delay: i * 0.03 }}
+                whileHover={{ rotate: 0, scale: 1.15, zIndex: 5 }}
+                className="brutal-sm grid place-items-center rounded-full leading-none"
+                style={{
+                  width: size,
+                  height: size,
+                  background: fill,
+                  boxShadow: isSel ? "0 0 0 3px #3B322C, 4px 4px 0 0 #3B322C" : undefined,
+                }}
               >
-                {g.name}
-                {size > 58 && (
-                  <span className="block text-[9px] font-black opacity-60">
-                    {g.affinity >= 0 ? "+" : ""}
-                    {g.affinity.toFixed(2)}
-                  </span>
-                )}
-              </span>
-            </motion.button>
+                <span
+                  className="px-1 text-center font-extrabold leading-tight text-ink"
+                  style={{ fontSize: size > 80 ? 13 : size > 58 ? 11 : 9.5 }}
+                >
+                  {g.name}
+                  {size > 58 && (
+                    <span className="block text-[9px] font-black opacity-60">
+                      {g.affinity >= 0 ? "+" : ""}
+                      {g.affinity.toFixed(2)}
+                    </span>
+                  )}
+                </span>
+              </motion.button>
+            </span>
           );
         })}
       </div>
