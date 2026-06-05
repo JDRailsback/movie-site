@@ -158,3 +158,40 @@ export async function getRecentlyWatched(profileId: string, limit = 18): Promise
 export function posterUrl(path?: string | null, size = "w342"): string | null {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
 }
+
+// --- recommendations ---
+export interface RecItem {
+  film: FilmCard;
+  rank: number;
+  score: number;
+  components: Record<string, number>;
+  explanation: { source: string; reasons: string[] };
+}
+
+export interface RecommendationSet {
+  setId: string;
+  surface: string;
+  modelVersion: string;
+  items: RecItem[];
+}
+
+export type FeedbackAction = "seen" | "loved" | "not_interested" | "watchlist" | "watched_because";
+
+export async function getRecs(profileId: string, surface: string): Promise<RecommendationSet> {
+  return unwrap<RecommendationSet>(
+    await fetch(`${API_BASE}/profiles/${profileId}/recs/${surface}`),
+  );
+}
+
+export async function sendFeedback(
+  profileId: string,
+  filmId: number,
+  action: FeedbackAction,
+  surface?: string,
+): Promise<void> {
+  await fetch(`${API_BASE}/profiles/${profileId}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filmId, action, surface }),
+  });
+}

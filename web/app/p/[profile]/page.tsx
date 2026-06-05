@@ -26,6 +26,7 @@ import {
 } from "@/lib/api";
 import { HEX, pastelFor } from "@/lib/pastels";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -149,9 +150,14 @@ export default function ProfileHubPage() {
           </FilterProvider>
         )}
 
-        <p className="mt-12 text-center text-base font-black uppercase tracking-wide text-ink/40">
-          ✦ Recs — blind spots · hidden gems · rabbit holes — coming next ✦
-        </p>
+        <div className="mt-12 text-center">
+          <Link
+            href={`/p/${profile}/recs`}
+            className="brutal inline-block rotate-1 rounded-full bg-coral px-8 py-4 font-display text-2xl font-black uppercase text-ink transition hover:-translate-y-1"
+          >
+            ✦ See what to watch next →
+          </Link>
+        </div>
       </div>
     </main>
   );
