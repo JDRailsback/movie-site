@@ -14,12 +14,19 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
   const selectedGenre = selection?.dim === "genre" ? selection.value : null;
   const selected = rows.find((r) => r.name === selectedGenre) ?? null;
 
+  // size relative to *this* user's range, so the spread is always visible even
+  // when affinities are all small in absolute terms.
+  const affs = rows.map((r) => r.affinity);
+  const lo = Math.min(...affs);
+  const hi = Math.max(...affs);
+  const range = hi - lo || 1;
+
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-center gap-2 py-1">
+      <div className="flex flex-wrap items-center justify-center gap-3 py-1">
         {rows.map((g) => {
-          const t = Math.max(0, Math.min(1, (g.affinity + 0.3) / 0.9));
-          const size = 44 + t * 70;
+          const norm = (g.affinity - lo) / range;
+          const size = 56 + norm * 72;
           const positive = g.affinity >= 0;
           const fill = positive ? HEX[pastelFor(g.name)].fill : MUTED;
           const count = countOf("genre", g.name);
@@ -40,11 +47,11 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
               }}
             >
               <span
-                className="px-1 text-center font-semibold leading-tight text-ink"
-                style={{ fontSize: size > 80 ? 12 : size > 58 ? 10.5 : 9 }}
+                className="px-1.5 text-center font-semibold leading-tight text-ink"
+                style={{ fontSize: size > 98 ? 13 : size > 74 ? 11 : 10 }}
               >
                 {g.name}
-                {size > 58 && (
+                {size > 74 && (
                   <span className="block text-[9px] font-medium opacity-50">
                     {isActive
                       ? `${count}`

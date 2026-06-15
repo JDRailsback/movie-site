@@ -5,14 +5,7 @@
 // Letterboxd).
 
 import { FilterBanner, FilterProvider } from "@/components/taste/FilterContext";
-import {
-  DecadeTile,
-  DirectorsTile,
-  GenreTile,
-  PassportTile,
-  PersonalityTile,
-  ThemesTile,
-} from "@/components/taste/Tiles";
+import { DirectorsTile, GenreTile, PersonalityTile, ThemesTile } from "@/components/taste/Tiles";
 import { PaperCard } from "@/components/ui/PaperCard";
 import {
   type FilmDatum,
@@ -58,17 +51,6 @@ export default function ProfileHubPage() {
   const topGenre = genres[0]?.name;
   const topDirector = directors.filter((d) => d.affinity > 0)[0]?.name;
 
-  const tiles = taste
-    ? [
-        { key: "g", el: <GenreTile taste={taste} /> },
-        { key: "d", el: <DirectorsTile taste={taste} /> },
-        { key: "t", el: <ThemesTile taste={taste} /> },
-        { key: "c", el: <DecadeTile taste={taste} /> },
-        { key: "p", el: <PassportTile taste={taste} /> },
-        { key: "v", el: <PersonalityTile taste={taste} /> },
-      ]
-    : [];
-
   return (
     <main className="relative min-h-screen w-full pb-20">
       <div className="mx-auto max-w-[1200px] px-6 pt-12 sm:px-8">
@@ -103,14 +85,15 @@ export default function ProfileHubPage() {
           <FilterProvider films={films}>
             <FilterBanner />
             <p className="mb-5 text-sm text-ink/40">
-              Tap any genre, director, decade, country or theme to filter your whole map.
+              Tap any genre, director or theme to filter your whole map.
             </p>
-            <div className="md:columns-2 [column-gap:1.5rem]">
-              {tiles.map((tile) => (
-                <div key={tile.key} className="mb-6 break-inside-avoid">
-                  {tile.el}
-                </div>
-              ))}
+            <div className="space-y-6">
+              <GenreTile taste={taste} />
+              <div className="grid items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <DirectorsTile taste={taste} />
+                <ThemesTile taste={taste} />
+                <PersonalityTile taste={taste} />
+              </div>
             </div>
           </FilterProvider>
         )}

@@ -4,7 +4,6 @@ import { useFilter } from "@/components/taste/FilterContext";
 import { GenreBubbles } from "@/components/taste/GenreBubbles";
 import { BrutalCard, BrutalTitle } from "@/components/ui/BrutalCard";
 import type { TasteProfile } from "@/lib/api";
-import { countryName, flag } from "@/lib/countries";
 import { HEX, pastelFor } from "@/lib/pastels";
 import { motion } from "framer-motion";
 
@@ -68,106 +67,6 @@ export function DirectorsTile({ taste, delay }: TileProps) {
           <li className="px-2 text-sm text-ink/50">No directors in this slice.</li>
         )}
       </ul>
-    </BrutalCard>
-  );
-}
-
-// ---------- Decades ----------
-function decadeColor(a: number): string {
-  if (a >= 0.3) return HEX.coral.fill;
-  if (a >= 0.12) return HEX.peach.fill;
-  if (a >= -0.05) return HEX.butter.fill;
-  if (a >= -0.2) return HEX.mint.fill;
-  return HEX.sky.fill;
-}
-
-export function DecadeTile({ taste, delay }: TileProps) {
-  const { isActive, selection, toggle, countOf } = useFilter();
-  const decades = Object.entries(taste.eraAffinity)
-    .map(([d, v]) => ({ decade: Number(d), ...v }))
-    .sort((a, b) => a.decade - b.decade);
-  const maxCount = Math.max(1, ...decades.map((d) => d.count));
-
-  return (
-    <BrutalCard bg="sky" delay={delay}>
-      <BrutalTitle hint="Size = how many you've seen · warm = you love it.">
-        Cinema century
-      </BrutalTitle>
-      <div className="grid grid-cols-5 place-items-center gap-x-1 gap-y-3 py-1">
-        {decades.map((d) => {
-          const size = 32 + (d.count / maxCount) * 28;
-          const sliceCount = countOf("decade", String(d.decade));
-          const dimmed = isActive && sliceCount === 0;
-          const isSel = selection?.dim === "decade" && selection.value === String(d.decade);
-          return (
-            <button
-              type="button"
-              key={d.decade}
-              onClick={() => toggle("decade", String(d.decade))}
-              className="flex flex-col items-center gap-1 transition hover:scale-105"
-              style={{ opacity: dimmed ? 0.35 : 1 }}
-              title={`${d.count} films · ${d.avg_rating}/10`}
-            >
-              <span
-                className="grid place-items-center rounded-full text-[10px] font-semibold text-ink/80"
-                style={{
-                  width: size,
-                  height: size,
-                  backgroundColor: decadeColor(d.affinity),
-                  boxShadow: isSel ? SELECTED_RING : undefined,
-                }}
-              >
-                {isActive ? sliceCount : d.count}
-              </span>
-              <span className="text-[11px] text-ink/50">{`'${String(d.decade).slice(2)}`}</span>
-            </button>
-          );
-        })}
-      </div>
-    </BrutalCard>
-  );
-}
-
-// ---------- Countries ----------
-export function PassportTile({ taste, delay }: TileProps) {
-  const { isActive, selection, toggle, countOf } = useFilter();
-  const countries = Object.entries(taste.countryAffinity)
-    .map(([cc, v]) => ({ cc, ...v }))
-    .filter((c) => c.count >= 2)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-
-  return (
-    <BrutalCard bg="mint" delay={delay}>
-      <BrutalTitle hint="Where your cinema comes from — ♥ = you rate it highest.">
-        Film passport
-      </BrutalTitle>
-      <div className="flex flex-wrap gap-2">
-        {countries.map((c) => {
-          const sliceCount = countOf("country", c.cc);
-          const dimmed = isActive && sliceCount === 0;
-          const isSel = selection?.dim === "country" && selection.value === c.cc;
-          return (
-            <button
-              type="button"
-              key={c.cc}
-              onClick={() => toggle("country", c.cc)}
-              className="flex items-center gap-2 rounded-full bg-paper px-3 py-1.5 text-sm transition hover:scale-105"
-              style={{
-                opacity: dimmed ? 0.35 : 1,
-                boxShadow: isSel ? SELECTED_RING : "0 1px 2px rgba(59,50,44,0.06)",
-              }}
-            >
-              <span className="text-base leading-none">{flag(c.cc)}</span>
-              <span className="font-medium text-ink">{countryName(c.cc)}</span>
-              <span className="text-xs text-ink/40">
-                {isActive ? sliceCount : c.count}
-                {!isActive && c.affinity > 0.2 ? " ♥" : ""}
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </BrutalCard>
   );
 }
