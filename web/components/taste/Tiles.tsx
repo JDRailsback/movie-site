@@ -18,7 +18,9 @@ const SELECTED_RING = "0 0 0 2px #3B322C";
 export function GenreTile({ taste, delay }: TileProps) {
   return (
     <BrutalCard bg="peach" delay={delay}>
-      <BrutalTitle hint="Bigger = you love it more.">Genre galaxy</BrutalTitle>
+      <BrutalTitle hint="How much you love each genre, vs. your own average. Tap one to filter.">
+        Genre affinities
+      </BrutalTitle>
       <GenreBubbles genres={taste.genreAffinity} />
     </BrutalCard>
   );
