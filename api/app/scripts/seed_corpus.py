@@ -38,6 +38,28 @@ class Strand:
 # decades to sweep for acclaimed older films (era coverage for the taste profile)
 _DECADES = [(1950, 1969), (1970, 1979), (1980, 1989), (1990, 1999), (2000, 2009), (2010, 2019)]
 
+# TMDB genre ids -> swept individually for catalogue depth the global strands miss
+_GENRES: dict[str, int] = {
+    "action": 28,
+    "adventure": 12,
+    "animation": 16,
+    "comedy": 35,
+    "crime": 80,
+    "documentary": 99,
+    "drama": 18,
+    "family": 10751,
+    "fantasy": 14,
+    "history": 36,
+    "horror": 27,
+    "music": 10402,
+    "mystery": 9648,
+    "romance": 10749,
+    "scifi": 878,
+    "thriller": 53,
+    "war": 10752,
+    "western": 37,
+}
+
 
 def _build_strands(base_pages: int, floor: int) -> list[Strand]:
     half = max(2, base_pages // 2)
@@ -73,6 +95,19 @@ def _build_strands(base_pages: int, floor: int) -> list[Strand]:
                     "vote_average_gte": 6.5,
                     "release_date_gte": f"{lo}-01-01",
                     "release_date_lte": f"{hi}-12-31",
+                },
+            )
+        )
+    for name, gid in _GENRES.items():
+        strands.append(
+            Strand(
+                f"genre-{name}",
+                half,
+                {
+                    "sort_by": "vote_average.desc",
+                    "vote_count_gte": max(floor, 150),
+                    "vote_average_gte": 6.2,
+                    "with_genres": str(gid),
                 },
             )
         )
