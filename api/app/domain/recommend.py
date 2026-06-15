@@ -96,12 +96,15 @@ def score(c: Candidate, t: Taste, w: dict[str, float]) -> tuple[float, dict[str,
 def fit_percent(score: float) -> int:
     """Map a raw fit score to an intuitive 0-100 "% match".
 
-    Scores for top recommendations cluster in a narrow high band (no film maxes
-    every dimension), so a linear lerp between two calibrated anchors spreads
-    them into a readable range rather than showing a flat ~65% for everything.
+    No film maxes every dimension (top genre + top director + every theme +
+    perfect runtime + top rating at once), so theoretical-perfect ~1.0 is never
+    reached and real top picks land near ~0.67. We therefore anchor the upper
+    end of the scale to that realistically-achievable band so the strongest
+    recommendations read in the high 90s, not the theoretical ceiling. A linear
+    lerp between the two anchors keeps the ranking's differences visible.
     """
-    lo_s, lo_p = 0.35, 60.0  # a modest fit reads as ~60%
-    hi_s, hi_p = 0.80, 99.0  # an excellent fit approaches 100%
+    lo_s, lo_p = 0.30, 50.0  # a marginal fit reads as ~50%
+    hi_s, hi_p = 0.67, 98.0  # the strongest realistic fit approaches 100%
     pct = lo_p + (score - lo_s) * (hi_p - lo_p) / (hi_s - lo_s)
     return max(0, min(100, round(pct)))
 
