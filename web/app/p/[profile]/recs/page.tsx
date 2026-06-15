@@ -8,14 +8,19 @@ import { useEffect, useState } from "react";
 
 const SURFACES = [
   {
+    key: "overall",
+    title: "Top picks",
+    blurb: "Your best overall matches — the highest-scoring films for your taste.",
+  },
+  {
     key: "blind_spots",
     title: "Blind spots",
-    blurb: "Acclaimed films you've somehow missed — that fit your taste.",
+    blurb: "Popular, acclaimed films you've somehow missed — that fit your taste.",
   },
   {
     key: "hidden_gems",
     title: "Hidden gems",
-    blurb: "Under-the-radar films the algorithm dug up just for you.",
+    blurb: "Niche, less-popular films the algorithm dug up just for you.",
   },
 ];
 

@@ -45,6 +45,7 @@ class Taste:
 
 # component weights per surface (sum ~1; collaborative deferred to Phase 3)
 WEIGHTS: dict[str, dict[str, float]] = {
+    "overall": {"q": 0.34, "g": 0.22, "d": 0.16, "k": 0.14, "e": 0.06, "c": 0.05, "r": 0.03},
     "blind_spots": {"q": 0.40, "g": 0.20, "d": 0.14, "k": 0.12, "e": 0.06, "c": 0.05, "r": 0.03},
     "hidden_gems": {"q": 0.20, "g": 0.24, "d": 0.16, "k": 0.20, "e": 0.08, "c": 0.07, "r": 0.05},
 }
@@ -137,6 +138,10 @@ def _explain(c: Candidate, t: Taste, surface: str) -> dict[str, Any]:
 
 
 def _gate(c: Candidate, surface: str, pop_threshold: float) -> bool:
+    if surface == "overall":
+        # best taste-fit across the whole pool, any popularity tier; a light
+        # vote-count + quality floor keeps out obscure low-confidence noise.
+        return c.vote_count >= 300 and c.weighted_rating >= 6.0
     if surface == "blind_spots":
         return c.vote_count >= 1000 and c.weighted_rating >= 6.8
     if surface == "hidden_gems":

@@ -13,7 +13,7 @@ from app.db.base import get_engine
 from app.domain.recommend import recommend
 from app.repositories import recommend_repo
 
-SURFACES = {"blind_spots", "hidden_gems"}
+SURFACES = {"overall", "blind_spots", "hidden_gems"}
 
 
 def generate(profile_id: uuid.UUID, surface: str, limit: int) -> list[dict[str, Any]] | None:
