@@ -42,7 +42,7 @@ export function DirectorsTile({ taste, delay }: TileProps) {
       <BrutalTitle hint="Filmmakers you rate above your average.">
         {isActive ? "Directors here" : "Directors you adore"}
       </BrutalTitle>
-      <ul className="min-h-[17rem] space-y-1.5">
+      <ul className="flex min-h-[17rem] flex-1 flex-col justify-between gap-1">
         {directors.length ? (
           directors.map((d, i) => {
             const isSel = selection?.dim === "director" && selection.value === d.name;
@@ -89,7 +89,7 @@ export function PersonalityTile({ taste, delay }: TileProps) {
     return (
       <BrutalCard bg="blush" delay={delay}>
         <BrutalTitle>This slice</BrutalTitle>
-        <div className="flex items-start justify-around gap-2">
+        <div className="flex flex-1 items-center justify-around gap-2">
           <Ring value={filtered.length} max={totalFilms} unit="" label="films" pastel="peach" />
           <Ring
             value={avgRating}
