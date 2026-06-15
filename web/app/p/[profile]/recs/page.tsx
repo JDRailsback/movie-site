@@ -1,6 +1,6 @@
 "use client";
 
-import { RecCard } from "@/components/recs/RecCard";
+import { RecRow } from "@/components/recs/RecRow";
 import { type RecItem, getRecs } from "@/lib/api";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -60,9 +60,9 @@ export default function RecsPage() {
         </header>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+          <div className="flex gap-4 overflow-hidden">
             {["a", "b", "c", "d", "e", "f"].map((k) => (
-              <div key={k} className="aspect-[2/3] skeleton rounded-xl" />
+              <div key={k} className="aspect-[2/3] w-44 shrink-0 skeleton rounded-xl" />
             ))}
           </div>
         ) : (
@@ -74,17 +74,12 @@ export default function RecsPage() {
                   <h2 className="font-display text-2xl font-semibold text-ink">{s.title}</h2>
                   <p className="mb-5 mt-1 text-sm text-ink/50">{s.blurb}</p>
                   {items.length ? (
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                      {items.map((it) => (
-                        <RecCard
-                          key={it.film.tmdbId}
-                          item={it}
-                          profileId={profile}
-                          surface={s.key}
-                          onRemove={(id) => remove(s.key, id)}
-                        />
-                      ))}
-                    </div>
+                    <RecRow
+                      items={items}
+                      profileId={profile}
+                      surface={s.key}
+                      onRemove={(id) => remove(s.key, id)}
+                    />
                   ) : (
                     <p className="text-sm font-semibold text-ink/50">
                       Nothing here yet — try importing more films, or check back as the corpus
