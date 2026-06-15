@@ -27,7 +27,7 @@ export function BrutalCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.4, ease: "easeOut", delay }}
       whileHover={{ y: -2 }}
-      className={`brutal rounded-2xl p-6 ${className}`}
+      className={`brutal h-full rounded-2xl p-6 ${className}`}
       style={{ backgroundColor: `${HEX[bg].fill}14` }}
     >
       {children}
