@@ -3,9 +3,8 @@
 // Live import progress (whimsical). Each stage is a bouncing pastel orb that
 // fills as the SSE stream advances. No spinners.
 
-import { FloatingShapes } from "@/components/ui/FloatingShapes";
 import type { ImportState } from "@/lib/api";
-import { BG, type Pastel } from "@/lib/pastels";
+import { HEX, type Pastel } from "@/lib/pastels";
 import { useImportProgress } from "@/lib/useImportProgress";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -38,14 +37,12 @@ function ImportProgress() {
   const failed = status === "failed";
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-12 px-6 text-center">
-      <FloatingShapes />
-
+    <main className="flex min-h-screen flex-col items-center justify-center gap-12 px-6 text-center">
       <div className="space-y-2">
-        <h1 className="font-display text-5xl font-black uppercase text-ink [text-shadow:3px_3px_0_#BFDCEC,5px_5px_0_#3B322C]">
-          {done ? "All spooled up!" : failed ? "The reel snapped" : "Threading the projector…"}
+        <h1 className="font-display text-4xl font-semibold text-ink">
+          {done ? "All set" : failed ? "Import failed" : "Building your profile…"}
         </h1>
-        <p className="text-ink-soft">
+        <p className="text-ink/55">
           {counts.total
             ? `${counts.matched ?? 0} of ${counts.total} films matched`
             : "Sit tight — big libraries take a minute."}
@@ -53,7 +50,7 @@ function ImportProgress() {
       </div>
 
       {failed ? (
-        <p className="rounded-full bg-coral px-5 py-2 text-sm font-medium text-coral-deep shadow-sticker">
+        <p className="rounded-full border border-ink/10 px-5 py-2 text-sm text-coral-deep">
           {error ?? "Something went sideways. Try again?"}
         </p>
       ) : (
@@ -64,25 +61,22 @@ function ImportProgress() {
             return (
               <div key={stage.key} className="flex flex-col items-center gap-3">
                 <motion.div
-                  animate={
-                    state === "active" ? { y: [0, -14, 0], scale: [1, 1.1, 1] } : { y: 0, scale: 1 }
-                  }
+                  animate={state === "active" ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                   transition={
                     state === "active"
-                      ? { duration: 0.9, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }
-                      : { type: "spring", stiffness: 200, damping: 14 }
+                      ? { duration: 1.2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }
+                      : { duration: 0.3 }
                   }
-                  className={`grid h-16 w-16 place-items-center rounded-full text-2xl font-black ${
-                    state === "pending"
-                      ? "border-[3px] border-dashed border-ink/40"
-                      : `brutal-sm ${BG[stage.pastel]}`
-                  }`}
+                  className="grid h-14 w-14 place-items-center rounded-full text-lg"
+                  style={{
+                    backgroundColor:
+                      state === "pending" ? "transparent" : `${HEX[stage.pastel].fill}66`,
+                    border: state === "pending" ? "2px dashed rgba(59,50,44,0.2)" : "none",
+                  }}
                 >
                   {state === "done" ? "✓" : state === "active" ? "•" : ""}
                 </motion.div>
-                <span
-                  className={`text-xs font-semibold ${state === "pending" ? "text-ink-faint" : "text-ink"}`}
-                >
+                <span className={`text-xs ${state === "pending" ? "text-ink/35" : "text-ink/70"}`}>
                   {stage.label}
                 </span>
               </div>
@@ -92,18 +86,16 @@ function ImportProgress() {
       )}
 
       {done && profileId && (
-        <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          <Link
-            href={`/p/${profileId}`}
-            className="brutal inline-block rounded-full bg-butter px-7 py-3 font-display text-lg font-black uppercase text-ink transition hover:-translate-y-1"
-          >
-            See your taste map →
-          </Link>
-        </motion.div>
+        <Link
+          href={`/p/${profileId}`}
+          className="rounded-full bg-ink px-6 py-3 font-medium text-paper transition hover:opacity-90"
+        >
+          See your taste map →
+        </Link>
       )}
 
       {failed && (
-        <Link href="/" className="text-sm font-semibold text-lilac-deep underline">
+        <Link href="/" className="text-sm text-ink/50 underline hover:text-ink">
           Start over
         </Link>
       )}

@@ -5,11 +5,9 @@ import type { GenreAffinity } from "@/lib/api";
 import { HEX, pastelFor } from "@/lib/pastels";
 import { AnimatePresence, motion } from "framer-motion";
 
-const MUTED = "#D9C7BB";
+const MUTED = "#E2D8CC";
+const SELECTED_RING = "0 0 0 2px #3B322C";
 
-// Genre bubbles drive the cross-filter: tapping one filters the whole hub to
-// your films in that genre (and unfurls its four signals). Sized by affinity;
-// faded when out of the active slice.
 export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity> }) {
   const rows = Object.values(genres).sort((a, b) => b.affinity - a.affinity);
   const { selection, isActive, toggle, countOf } = useFilter();
@@ -18,75 +16,61 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-center gap-2.5 py-1">
-        {rows.map((g, i) => {
+      <div className="flex flex-wrap items-center justify-center gap-2 py-1">
+        {rows.map((g) => {
           const t = Math.max(0, Math.min(1, (g.affinity + 0.3) / 0.9));
-          const size = 44 + t * 74;
+          const size = 44 + t * 70;
           const positive = g.affinity >= 0;
           const fill = positive ? HEX[pastelFor(g.name)].fill : MUTED;
-          let h = 0;
-          for (const c of g.name) h += c.charCodeAt(0);
-          const tilt = (h % 9) - 4;
           const count = countOf("genre", g.name);
           const dimmed = isActive && count === 0;
           const isSel = g.name === selectedGenre;
           return (
-            <span
+            <button
+              type="button"
               key={g.name}
-              className="inline-block animate-float"
-              style={{ animationDelay: `${(i % 7) * 0.5}s`, animationDuration: `${5 + (i % 4)}s` }}
+              onClick={() => toggle("genre", g.name)}
+              className="grid place-items-center rounded-full leading-none transition hover:scale-105"
+              style={{
+                width: size,
+                height: size,
+                backgroundColor: fill,
+                opacity: dimmed ? 0.3 : 1,
+                boxShadow: isSel ? SELECTED_RING : "0 1px 2px rgba(59,50,44,0.06)",
+              }}
             >
-              <motion.button
-                type="button"
-                onClick={() => toggle("genre", g.name)}
-                initial={{ scale: 0, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: dimmed ? 0.28 : 1, rotate: tilt }}
-                viewport={{ once: true }}
-                animate={{ opacity: dimmed ? 0.28 : 1 }}
-                transition={{ type: "spring", stiffness: 280, damping: 14, delay: i * 0.03 }}
-                whileHover={{ rotate: 0, scale: 1.15, zIndex: 5 }}
-                className="brutal-sm grid place-items-center rounded-full leading-none"
-                style={{
-                  width: size,
-                  height: size,
-                  background: fill,
-                  boxShadow: isSel ? "0 0 0 3px #3B322C, 4px 4px 0 0 #3B322C" : undefined,
-                }}
+              <span
+                className="px-1 text-center font-semibold leading-tight text-ink"
+                style={{ fontSize: size > 80 ? 12 : size > 58 ? 10.5 : 9 }}
               >
-                <span
-                  className="px-1 text-center font-extrabold leading-tight text-ink"
-                  style={{ fontSize: size > 80 ? 13 : size > 58 ? 11 : 9.5 }}
-                >
-                  {g.name}
-                  {size > 58 && (
-                    <span className="block text-[9px] font-black opacity-60">
-                      {isActive
-                        ? `${count}`
-                        : `${g.affinity >= 0 ? "+" : ""}${g.affinity.toFixed(2)}`}
-                    </span>
-                  )}
-                </span>
-              </motion.button>
-            </span>
+                {g.name}
+                {size > 58 && (
+                  <span className="block text-[9px] font-medium opacity-50">
+                    {isActive
+                      ? `${count}`
+                      : `${g.affinity >= 0 ? "+" : ""}${g.affinity.toFixed(2)}`}
+                  </span>
+                )}
+              </span>
+            </button>
           );
         })}
       </div>
 
-      {/* fixed-height region so selecting a genre never changes the tile height
-          (which would reshuffle the masonry layout) */}
       <div className="mt-3 min-h-[156px]">
         <AnimatePresence mode="wait">
           {selected ? (
             <motion.div
               key={selected.name}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="brutal-sm rounded-xl bg-paper p-3"
+              exit={{ opacity: 0, y: 6 }}
+              className="rounded-xl bg-paper p-3"
+              style={{ boxShadow: "0 1px 2px rgba(59,50,44,0.06)" }}
             >
-              <p className="mb-2 font-display text-base font-black uppercase text-ink">
+              <p className="mb-2 font-display text-base font-semibold text-ink">
                 {selected.name}{" "}
-                <span className="text-xs font-bold normal-case text-ink/60">
+                <span className="text-xs font-normal text-ink/50">
                   · {selected.count} films · {selected.avg_rating.toFixed(1)}/10
                 </span>
               </p>
@@ -96,8 +80,8 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
               <Signal label="How often you ♥ it" v={selected.components.likes} />
             </motion.div>
           ) : (
-            <p className="pt-6 text-center text-xs font-bold text-ink/50">
-              ▸ tap a genre to filter your whole map
+            <p className="pt-6 text-center text-xs text-ink/40">
+              Tap a genre to filter your whole map
             </p>
           )}
         </AnimatePresence>
@@ -110,9 +94,9 @@ function Signal({ label, v }: { label: string; v: number }) {
   const pct = Math.min(Math.abs(v), 1) * 50;
   return (
     <div className="flex items-center gap-2 py-0.5 text-[11px]">
-      <span className="w-32 shrink-0 font-semibold text-ink/70">{label}</span>
-      <div className="relative h-2.5 flex-1 rounded-full border border-ink bg-paper-deep">
-        <div className="absolute left-1/2 top-0 h-full w-px bg-ink/30" />
+      <span className="w-32 shrink-0 text-ink/55">{label}</span>
+      <div className="relative h-2 flex-1 rounded-full bg-ink/5">
+        <div className="absolute left-1/2 top-0 h-full w-px bg-ink/15" />
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}

@@ -1,11 +1,9 @@
 "use client";
 
-// Landing (whimsical redesign). A breathing blob drop-zone for the export
-// (primary), a username pill (fallback), drifting pastel shapes behind.
+// Landing (minimal). A clean drop zone for the export (primary) + a username
+// field (fallback).
 
-import { FloatingShapes } from "@/components/ui/FloatingShapes";
 import { importByUsername, uploadExport } from "@/lib/api";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { type DragEvent, useRef, useState } from "react";
 
@@ -36,21 +34,11 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-16 text-center">
-      <FloatingShapes />
-
-      <div className="space-y-4">
-        <motion.h1
-          initial={{ scale: 0.7, opacity: 0, rotate: -4 }}
-          animate={{ scale: 1, opacity: 1, rotate: -2 }}
-          transition={{ type: "spring", stiffness: 200, damping: 12 }}
-          className="font-display text-8xl font-black uppercase text-ink [text-shadow:4px_4px_0_#F6AE96,7px_7px_0_#3B322C]"
-        >
-          Reel
-        </motion.h1>
-        <p className="mx-auto max-w-md text-lg text-ink-soft">
-          A playful map of your film taste — drawn from <em>your</em> ratings, not the crowd&apos;s.
-          Drop your Letterboxd history and let&apos;s wander.
+    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 px-6 py-16 text-center">
+      <div className="space-y-3">
+        <h1 className="font-display text-5xl font-semibold text-ink">Reel</h1>
+        <p className="text-ink/60">
+          A map of your film taste — drawn from <em>your</em> ratings, not the crowd&apos;s.
         </p>
       </div>
 
@@ -65,7 +53,7 @@ export default function LandingPage() {
         }}
       />
 
-      <motion.button
+      <button
         type="button"
         disabled={busy}
         onClick={() => fileRef.current?.click()}
@@ -75,25 +63,22 @@ export default function LandingPage() {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.97 }}
-        animate={dragging ? { scale: 1.08 } : {}}
-        className={`grid h-60 w-60 place-items-center rounded-blob border-[3px] border-ink text-center text-ink transition-colors [box-shadow:7px_7px_0_0_#3B322C] ${
-          dragging ? "bg-mint pat-dots" : "bg-butter pat-dots"
-        } ${busy ? "opacity-70" : "animate-breathe"}`}
+        className={`grid w-full place-items-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition ${
+          dragging ? "border-ink/40 bg-ink/5" : "border-ink/15 hover:border-ink/30"
+        } ${busy ? "opacity-60" : ""}`}
       >
-        <span className="px-6">
-          <span className="block font-display text-2xl font-bold">
-            {busy ? "Unspooling…" : dragging ? "Drop it!" : "Drop your export here"}
+        <span>
+          <span className="block font-display text-xl font-semibold text-ink">
+            {busy ? "Unspooling…" : dragging ? "Drop it" : "Drop your Letterboxd export"}
           </span>
-          <span className="mt-1 block text-sm text-ink-soft">or tap to browse · .zip</span>
+          <span className="mt-1 block text-sm text-ink/45">or click to browse · .zip</span>
         </span>
-      </motion.button>
+      </button>
 
-      <div className="flex w-full max-w-xs items-center gap-3 text-xs uppercase tracking-widest text-ink-faint">
-        <span className="h-px flex-1 bg-paper-edge" />
-        or peek at a username
-        <span className="h-px flex-1 bg-paper-edge" />
+      <div className="flex w-full items-center gap-3 text-xs uppercase tracking-widest text-ink/30">
+        <span className="h-px flex-1 bg-ink/10" />
+        or
+        <span className="h-px flex-1 bg-ink/10" />
       </div>
 
       <form
@@ -101,7 +86,7 @@ export default function LandingPage() {
           e.preventDefault();
           if (username.trim()) go(importByUsername(username.trim()));
         }}
-        className="flex w-full max-w-sm items-center gap-2"
+        className="flex w-full items-center gap-2"
       >
         <input
           type="text"
@@ -109,32 +94,22 @@ export default function LandingPage() {
           disabled={busy}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="letterboxd username"
-          className="brutal-sm h-12 flex-1 rounded-full bg-paper px-5 font-semibold text-ink outline-none"
+          className="h-11 flex-1 rounded-full border border-ink/15 bg-paper px-4 text-ink outline-none transition focus:border-ink/40"
         />
-        <motion.button
+        <button
           type="submit"
           disabled={busy || !username.trim()}
-          whileHover={{ scale: 1.05, rotate: -2 }}
-          whileTap={{ scale: 0.95 }}
-          className="brutal-sm h-12 rounded-full bg-lilac px-5 font-black uppercase text-ink disabled:opacity-50"
+          className="h-11 rounded-full bg-ink px-5 font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
         >
           Go
-        </motion.button>
+        </button>
       </form>
 
-      {error && (
-        <motion.p
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="rounded-full bg-coral px-4 py-2 text-sm font-medium text-coral-deep shadow-sticker"
-        >
-          {error}
-        </motion.p>
-      )}
+      {error && <p className="text-sm text-coral-deep">{error}</p>}
 
-      <p className="max-w-sm text-xs text-ink-faint">
-        Tip: Letterboxd → Settings → Data → Export. Uploading is faster and far more complete than a
-        username peek.
+      <p className="text-xs text-ink/40">
+        Tip: Letterboxd → Settings → Data → Export. Uploading is faster and more complete than a
+        username lookup.
       </p>
     </main>
   );

@@ -103,11 +103,11 @@ export function FilterBanner() {
           initial={{ y: -12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -12, opacity: 0 }}
-          className="brutal sticky top-[3.25rem] z-30 mb-6 flex flex-wrap items-center gap-3 rounded-full bg-butter px-5 py-2"
+          className="brutal sticky top-4 z-30 mb-6 flex flex-wrap items-center gap-3 rounded-full bg-paper px-5 py-2"
         >
-          <span className="text-sm font-bold text-ink">
+          <span className="text-sm text-ink/70">
             Filtering by {DIM_NOUN[selection.dim]}{" "}
-            <strong className="font-black">
+            <strong className="font-semibold text-ink">
               {selection.dim === "decade"
                 ? `${selection.value}s`
                 : selection.dim === "country"
@@ -119,7 +119,7 @@ export function FilterBanner() {
           <button
             type="button"
             onClick={clear}
-            className="brutal-sm rounded-full bg-coral px-3 py-1 text-xs font-black uppercase text-ink"
+            className="rounded-full bg-ink px-3 py-1 text-xs font-medium text-paper"
           >
             ✕ clear
           </button>

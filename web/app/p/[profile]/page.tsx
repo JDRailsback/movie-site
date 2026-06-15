@@ -13,8 +13,6 @@ import {
   PersonalityTile,
   ThemesTile,
 } from "@/components/taste/Tiles";
-import { FloatingShapes } from "@/components/ui/FloatingShapes";
-import { Marquee } from "@/components/ui/Marquee";
 import { PaperCard } from "@/components/ui/PaperCard";
 import {
   type FilmDatum,
@@ -25,7 +23,6 @@ import {
   getTasteProfile,
 } from "@/lib/api";
 import { HEX, pastelFor } from "@/lib/pastels";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -63,52 +60,27 @@ export default function ProfileHubPage() {
 
   const tiles = taste
     ? [
-        { key: "g", el: <GenreTile taste={taste} tilt={-2} /> },
-        { key: "d", el: <DirectorsTile taste={taste} tilt={2.5} /> },
-        { key: "t", el: <ThemesTile taste={taste} tilt={-2.5} /> },
-        { key: "c", el: <DecadeTile taste={taste} tilt={2} /> },
-        { key: "p", el: <PassportTile taste={taste} tilt={-2} /> },
-        { key: "v", el: <PersonalityTile taste={taste} tilt={2.5} /> },
+        { key: "g", el: <GenreTile taste={taste} /> },
+        { key: "d", el: <DirectorsTile taste={taste} /> },
+        { key: "t", el: <ThemesTile taste={taste} /> },
+        { key: "c", el: <DecadeTile taste={taste} /> },
+        { key: "p", el: <PassportTile taste={taste} /> },
+        { key: "v", el: <PersonalityTile taste={taste} /> },
       ]
     : [];
 
-  const marquee = [
-    "Your taste map",
-    `${summary?.filmCount ?? ""} films`,
-    topGenre ? `${topGenre} lover` : "",
-    topDirector ?? "",
-    "Now showing",
-    "Reel",
-  ].filter(Boolean) as string[];
-
   return (
-    <main className="relative min-h-screen w-full overflow-x-clip pb-20">
-      <FloatingShapes />
-
-      <div className="sticky top-0 z-40">
-        <Marquee items={marquee} />
-      </div>
-
-      <div className="mx-auto max-w-[1380px] px-6 pt-8 sm:px-10 lg:px-16">
-        <header className="mb-8">
-          <motion.span
-            initial={{ scale: 0, rotate: -12 }}
-            animate={{ scale: 1, rotate: -3 }}
-            transition={{ type: "spring", stiffness: 240, damping: 12 }}
-            className="brutal-sm inline-block rounded-full bg-mint px-3 py-1 text-xs font-black uppercase tracking-widest text-ink"
-          >
-            ✦ Your taste map ✦
-          </motion.span>
-          <motion.h1
-            initial={{ y: 30, opacity: 0, rotate: -3 }}
-            animate={{ y: 0, opacity: 1, rotate: -1.5 }}
-            transition={{ type: "spring", stiffness: 130, damping: 11 }}
-            className="mt-3 inline-block font-display text-7xl font-black uppercase leading-none text-ink [text-shadow:4px_4px_0_#F6AE96,7px_7px_0_#3B322C] sm:text-8xl"
-          >
+    <main className="relative min-h-screen w-full pb-20">
+      <div className="mx-auto max-w-[1200px] px-6 pt-12 sm:px-8">
+        <header className="mb-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/40">
+            Your taste map
+          </p>
+          <h1 className="mt-2 font-display text-5xl font-semibold text-ink sm:text-6xl">
             {summary?.displayName ?? summary?.username ?? "You"}
-          </motion.h1>
+          </h1>
           {taste && topGenre && (
-            <p className="mt-5 max-w-2xl text-2xl font-bold text-ink">
+            <p className="mt-4 max-w-2xl text-lg text-ink/70">
               You light up for <Hl text={topGenre} k={topGenre} />
               {topDirector ? (
                 <>
@@ -130,19 +102,12 @@ export default function ProfileHubPage() {
         ) : (
           <FilterProvider films={films}>
             <FilterBanner />
-            <p className="mb-4 text-sm font-bold text-ink/50">
-              ✦ tap any genre, director, decade, country or theme to filter your whole map ✦
+            <p className="mb-5 text-sm text-ink/40">
+              Tap any genre, director, decade, country or theme to filter your whole map.
             </p>
-            <div className="md:columns-2 xl:columns-3 [column-gap:1.25rem]">
-              {tiles.map((tile, i) => (
-                <div
-                  key={tile.key}
-                  className="mb-5 break-inside-avoid animate-float"
-                  style={{
-                    animationDelay: `${(i % 5) * 0.6}s`,
-                    animationDuration: `${7 + (i % 3)}s`,
-                  }}
-                >
+            <div className="md:columns-2 [column-gap:1.5rem]">
+              {tiles.map((tile) => (
+                <div key={tile.key} className="mb-6 break-inside-avoid">
                   {tile.el}
                 </div>
               ))}
@@ -150,12 +115,12 @@ export default function ProfileHubPage() {
           </FilterProvider>
         )}
 
-        <div className="mt-12 text-center">
+        <div className="mt-14 text-center">
           <Link
             href={`/p/${profile}/recs`}
-            className="brutal inline-block rotate-1 rounded-full bg-coral px-8 py-4 font-display text-2xl font-black uppercase text-ink transition hover:-translate-y-1"
+            className="inline-block rounded-full bg-ink px-7 py-3 font-medium text-paper transition hover:opacity-90"
           >
-            ✦ See what to watch next →
+            See what to watch next →
           </Link>
         </div>
       </div>
@@ -166,8 +131,8 @@ export default function ProfileHubPage() {
 function Hl({ text, k }: { text: string; k: string }) {
   return (
     <span
-      className="brutal-sm mx-0.5 inline-block -rotate-1 rounded-md px-1.5 font-black text-ink"
-      style={{ background: HEX[pastelFor(k)].fill }}
+      className="rounded px-1.5 font-semibold text-ink"
+      style={{ backgroundColor: `${HEX[pastelFor(k)].fill}40` }}
     >
       {text}
     </span>

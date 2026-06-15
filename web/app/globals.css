@@ -4,60 +4,25 @@
 
 body {
   @apply text-ink font-sans antialiased;
-  /* colourful pastel wash filling the whole screen + a dot grid on top */
-  background-color: #fbf6ec;
-  background-image: radial-gradient(rgba(59, 50, 44, 0.07) 1.5px, transparent 1.6px),
-    radial-gradient(circle at 12% 18%, rgba(159, 134, 226, 0.4), transparent 40%),
-    radial-gradient(circle at 88% 12%, rgba(93, 197, 156, 0.4), transparent 40%),
-    radial-gradient(circle at 82% 82%, rgba(246, 162, 79, 0.42), transparent 42%),
-    radial-gradient(circle at 16% 86%, rgba(244, 154, 193, 0.42), transparent 42%),
-    radial-gradient(circle at 50% 50%, rgba(111, 172, 218, 0.28), transparent 55%);
-  background-size: 15px 15px, auto, auto, auto, auto, auto;
-  background-attachment: fixed;
+  background-color: #fbf8f2; /* clean, warm off-white */
 }
 
-/* ---- maximalist pattern overlays (apply over a pastel bg-colour) ---- */
-.pat-dots {
-  background-image: radial-gradient(rgba(59, 50, 44, 0.16) 2px, transparent 2.2px);
-  background-size: 13px 13px;
-}
-.pat-stripes {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(59, 50, 44, 0.1) 0 7px,
-    transparent 7px 15px
-  );
-}
-.pat-checks {
-  background-image: linear-gradient(
-      45deg,
-      rgba(59, 50, 44, 0.08) 25%,
-      transparent 25% 75%,
-      rgba(59, 50, 44, 0.08) 75%
-    ),
-    linear-gradient(
-      45deg,
-      rgba(59, 50, 44, 0.08) 25%,
-      transparent 25% 75%,
-      rgba(59, 50, 44, 0.08) 75%
-    );
-  background-size: 18px 18px;
-  background-position: 0 0, 9px 9px;
-}
+/* pattern overlays kept as no-ops so any lingering refs are harmless */
+.pat-dots,
+.pat-stripes,
+.pat-checks,
 .pat-grid {
-  background-image: linear-gradient(rgba(59, 50, 44, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 50, 44, 0.08) 1px, transparent 1px);
-  background-size: 16px 16px;
+  background-image: none;
 }
 
-/* hard "brutalist" offset shadow with an ink keyline */
+/* soft, minimal card + chip surfaces (was the brutalist outline+offset shadow) */
 .brutal {
-  border: 3px solid #3b322c;
-  box-shadow: 6px 6px 0 0 #3b322c;
+  border: 1px solid rgba(59, 50, 44, 0.08);
+  box-shadow: 0 1px 2px rgba(59, 50, 44, 0.04), 0 12px 32px -20px rgba(59, 50, 44, 0.28);
 }
 .brutal-sm {
-  border: 2px solid #3b322c;
-  box-shadow: 3px 3px 0 0 #3b322c;
+  border: 1px solid rgba(59, 50, 44, 0.07);
+  box-shadow: 0 1px 2px rgba(59, 50, 44, 0.05);
 }
 
 /* Playful skeleton (PLAN §10: skeletons, never spinners) */
