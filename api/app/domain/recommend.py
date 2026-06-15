@@ -93,6 +93,19 @@ def score(c: Candidate, t: Taste, w: dict[str, float]) -> tuple[float, dict[str,
     return total, contrib
 
 
+def fit_percent(score: float) -> int:
+    """Map a raw fit score to an intuitive 0-100 "% match".
+
+    Scores for top recommendations cluster in a narrow high band (no film maxes
+    every dimension), so a linear lerp between two calibrated anchors spreads
+    them into a readable range rather than showing a flat ~65% for everything.
+    """
+    lo_s, lo_p = 0.35, 60.0  # a modest fit reads as ~60%
+    hi_s, hi_p = 0.80, 99.0  # an excellent fit approaches 100%
+    pct = lo_p + (score - lo_s) * (hi_p - lo_p) / (hi_s - lo_s)
+    return max(0, min(100, round(pct)))
+
+
 def _explain(c: Candidate, t: Taste, surface: str) -> dict[str, Any]:
     reasons: list[str] = []
     # director
@@ -164,6 +177,7 @@ def recommend(
             {
                 "candidate": c,
                 "score": round(s, 4),
+                "fit": fit_percent(s),
                 "components": {k: round(v, 4) for k, v in contrib.items()},
                 "explanation": _explain(c, taste, surface),
             }

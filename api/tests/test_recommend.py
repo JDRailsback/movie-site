@@ -1,6 +1,6 @@
 """Unit tests for the recommendation ranker (pure)."""
 
-from app.domain.recommend import Candidate, Taste, recommend
+from app.domain.recommend import Candidate, Taste, fit_percent, recommend
 
 
 def _taste() -> Taste:
@@ -61,3 +61,15 @@ def test_explanation_names_a_director_and_genre() -> None:
 def test_blind_spots_gate_excludes_obscure() -> None:
     obscure = _cand(3, vote_count=300)  # below blind-spots vote floor (1000)
     assert recommend([obscure], _taste(), "blind_spots") == []
+
+
+def test_fit_percent_is_bounded_and_monotonic() -> None:
+    assert 0 <= fit_percent(-1.0) <= 100
+    assert fit_percent(2.0) == 100
+    assert fit_percent(0.7) > fit_percent(0.5)  # higher score -> higher % match
+
+
+def test_recommend_emits_fit_in_match_range() -> None:
+    [item] = recommend([_cand(1)], _taste(), "blind_spots")
+    assert isinstance(item["fit"], int)
+    assert 0 <= item["fit"] <= 100

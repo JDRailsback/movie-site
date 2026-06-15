@@ -165,6 +165,7 @@ export interface RecItem {
   film: FilmCard;
   rank: number;
   score: number;
+  fit: number; // 0-100 "% match" to the user's taste
   components: Record<string, number>;
   explanation: { source: string; reasons: string[] };
 }

@@ -65,6 +65,7 @@ async def get_recs(
                 ),
                 rank=i + 1,
                 score=it["score"],
+                fit=it["fit"],
                 components=it["components"],
                 explanation=Explanation(**it["explanation"]),
             )

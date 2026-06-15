@@ -120,6 +120,7 @@ class RecommendationItem(ApiModel):
     film: FilmCard
     rank: int
     score: float
+    fit: int = 0  # 0-100 "% match" to the user's taste
     components: dict[str, float] = Field(default_factory=dict)
     explanation: Explanation
 
