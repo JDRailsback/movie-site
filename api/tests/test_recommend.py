@@ -24,8 +24,8 @@ def _cand(tmdb_id: int, **kw) -> Candidate:
         year=1995,
         poster_path=None,
         runtime_min=120,
-        weighted_rating=7.5,
-        vote_count=2000,
+        weighted_rating=8.2,
+        vote_count=10000,
         popularity=10.0,
         decade=1990,
         genres=[1],
@@ -46,9 +46,9 @@ def test_blind_spots_rank_taste_fit_high() -> None:
 
 def test_disliked_genre_is_damped() -> None:
     horror = _cand(2, genres=[2], directors=[], keywords=[], weighted_rating=9.0)
-    [item] = recommend([horror], _taste(), "blind_spots")
-    # damping pulls a celebrated but hated-genre film well below its raw quality
-    assert item["score"] < 0.5
+    # hated genre (-0.8 affinity) + damping drops score below the taste-fit floor;
+    # the film is excluded from blind_spots entirely rather than shown with a low score.
+    assert recommend([horror], _taste(), "blind_spots") == []
 
 
 def test_explanation_names_a_director_and_genre() -> None:
@@ -59,7 +59,7 @@ def test_explanation_names_a_director_and_genre() -> None:
 
 
 def test_blind_spots_gate_excludes_obscure() -> None:
-    obscure = _cand(3, vote_count=300)  # below blind-spots vote floor (1000)
+    obscure = _cand(3, vote_count=300)  # below blind-spots vote floor (5000)
     assert recommend([obscure], _taste(), "blind_spots") == []
 
 
