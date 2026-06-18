@@ -17,6 +17,7 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 async def _resolve(profile_id: str) -> uuid.UUID:
     """Resolve a UUID string or Letterboxd username to a profile UUID."""
+
     def _lookup() -> uuid.UUID | None:
         with get_engine().connect() as conn:
             return taste_repo.resolve_profile_id(conn, profile_id)
