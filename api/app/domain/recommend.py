@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any
 
 
@@ -141,20 +142,25 @@ def _explain(c: Candidate, t: Taste, surface: str) -> dict[str, Any]:
     return {"source": surface, "reasons": reasons[:3]}
 
 
-def _gate(c: Candidate, surface: str, pop_threshold: float) -> bool:
+def _gate(c: Candidate, surface: str, _pop_threshold: float = 0.0) -> bool:
     if surface == "overall":
         # best taste-fit across the whole pool, any popularity tier; a light
         # vote-count + quality floor keeps out obscure low-confidence noise.
         return c.vote_count >= 300 and c.weighted_rating >= 6.0
     if surface == "blind_spots":
-        return c.vote_count >= 1000 and c.weighted_rating >= 6.8
+        # rating is the primary signal — 7.8 floor keeps this genuinely acclaimed.
+        # 5k vote floor is enough to trust the score without requiring blockbuster
+        # audiences, so films like Mulholland Drive or The Lighthouse can appear.
+        return c.vote_count >= 5_000 and c.weighted_rating >= 7.8
     if surface == "hidden_gems":
-        # under-the-radar but reliable: good rating, lower popularity, a vote-count
-        # floor for trust and a ceiling to exclude the mega-popular canon.
+        # obscure but genuinely good: at least 10 years old so this doesn't
+        # overlap with recent releases; quality + vote floors filter niche noise.
+        cutoff_year = datetime.now().year - 10
         return (
-            c.weighted_rating >= 6.6
-            and c.popularity <= pop_threshold
-            and 150 <= c.vote_count <= 9000
+            c.weighted_rating >= 7.2
+            and 500 <= c.vote_count <= 3000
+            and c.year is not None
+            and c.year <= cutoff_year
         )
     return True
 
@@ -163,17 +169,26 @@ def recommend(
     candidates: list[Candidate], taste: Taste, surface: str, *, limit: int = 24
 ) -> list[dict[str, Any]]:
     w = WEIGHTS.get(surface, WEIGHTS["blind_spots"])
-    pops = sorted(c.popularity for c in candidates)
-    pct = 0.65 if surface == "hidden_gems" else 0.5
-    pop_threshold = pops[min(int(len(pops) * pct), len(pops) - 1)] if pops else 0.0
 
-    gated = [c for c in candidates if _gate(c, surface, pop_threshold)]
+    gated = [c for c in candidates if _gate(c, surface, 0.0)]
     scored: list[tuple[float, Candidate, dict[str, float]]] = []
     for c in gated:
         s, contrib = score(c, taste, w)
         scored.append((s, c, contrib))
 
-    scored.sort(key=lambda x: x[0], reverse=True)
+    if surface == "blind_spots":
+        # light taste-fit floor avoids actively-disliked genres; rank by
+        # weighted_rating descending so the most acclaimed films surface first
+        # (pure vote_count favours franchise blockbusters over prestige films).
+        scored = [(s, c, contrib) for s, c, contrib in scored if s >= 0.35]
+        scored.sort(key=lambda x: x[1].weighted_rating, reverse=True)
+    elif surface == "hidden_gems":
+        # higher taste-fit floor than before keeps niche-but-mismatched titles out,
+        # then rank by vote_count ascending (most obscure first).
+        scored = [(s, c, contrib) for s, c, contrib in scored if s >= 0.44]
+        scored.sort(key=lambda x: x[1].vote_count)
+    else:
+        scored.sort(key=lambda x: x[0], reverse=True)
 
     # diversity: at most 3 films per director in the final list
     out: list[dict[str, Any]] = []

@@ -162,6 +162,24 @@ def get_taste(conn: Connection, profile_id: uuid.UUID) -> dict[str, Any] | None:
     return dict(row) if row else None
 
 
+def resolve_profile_id(conn: Connection, profile_id_or_username: str) -> uuid.UUID | None:
+    """Return the UUID for a profile given either a UUID string or a Letterboxd username."""
+    try:
+        return uuid.UUID(profile_id_or_username)
+    except ValueError:
+        pass
+    row = (
+        conn.execute(
+            select(t.letterboxd_profile.c.id).where(
+                t.letterboxd_profile.c.username == profile_id_or_username
+            )
+        )
+        .mappings()
+        .first()
+    )
+    return row["id"] if row else None
+
+
 def get_profile_summary(conn: Connection, profile_id: uuid.UUID) -> dict[str, Any] | None:
     p = (
         conn.execute(t.letterboxd_profile.select().where(t.letterboxd_profile.c.id == profile_id))

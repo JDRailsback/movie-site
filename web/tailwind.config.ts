@@ -1,23 +1,23 @@
 import type { Config } from "tailwindcss";
 
-// Whimsical design system: cream "paper" base + a rotating set of soft pastels,
-// organic shapes, characterful type. Playful but legible (light mode).
+// Slate-dark design system: near-black base + dark-tinted pastels + bright labels.
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // paper + ink
-        paper: { DEFAULT: "#FFFBF0", deep: "#FBF0D6", edge: "#F0E2C2" },
-        ink: { DEFAULT: "#3B322C", soft: "#857669", faint: "#B6A795" },
-        // warm summer palette: coral / yellow / teal shades (sync with pastels.ts)
-        blush: { DEFAULT: "#F8C2AD", deep: "#C25C3E" },
-        peach: { DEFAULT: "#F8B093", deep: "#CE5E34" },
-        butter: { DEFAULT: "#FCE08C", deep: "#B08612" },
-        mint: { DEFAULT: "#8FDCDC", deep: "#1F8A8A" },
-        sky: { DEFAULT: "#5FC9CA", deep: "#156A6A" },
-        lilac: { DEFAULT: "#F6CF77", deep: "#9E7611" },
-        coral: { DEFAULT: "#F5906B", deep: "#C8502C" },
+        // paper = dark surfaces, ink = light text
+        paper: { DEFAULT: "#1C1C1E", deep: "#2C2C2E", edge: "#3A3A3C" },
+        ink: { DEFAULT: "#F0F0EE", soft: "#AEAEB2", faint: "#636366" },
+        // Dark-tinted pastel surfaces (fill) + bright readable labels (deep).
+        // Sync HEX values with pastels.ts.
+        blush: { DEFAULT: "#4A2030", deep: "#F4B0C8" },
+        peach: { DEFAULT: "#4A2818", deep: "#F4C0A0" },
+        butter: { DEFAULT: "#3A3010", deep: "#F4DC80" },
+        mint: { DEFAULT: "#0E3A3A", deep: "#78D8D8" },
+        sky: { DEFAULT: "#0A2C3A", deep: "#68C8E0" },
+        lilac: { DEFAULT: "#302810", deep: "#F4C868" },
+        coral: { DEFAULT: "#4A2010", deep: "#F4A890" },
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
@@ -29,8 +29,8 @@ const config: Config = {
         squircle: "1.75rem",
       },
       boxShadow: {
-        sticker: "0 6px 0 -2px rgba(59,50,44,0.10), 0 10px 20px -8px rgba(59,50,44,0.20)",
-        lift: "0 12px 30px -12px rgba(59,50,44,0.30)",
+        sticker: "0 6px 0 -2px rgba(0,0,0,0.4), 0 10px 20px -8px rgba(0,0,0,0.5)",
+        lift: "0 12px 30px -12px rgba(0,0,0,0.5)",
       },
       keyframes: {
         float: {

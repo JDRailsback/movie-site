@@ -27,7 +27,7 @@ export function BrutalCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.4, ease: "easeOut", delay }}
       className={`flex h-full flex-col rounded-md border border-ink/10 p-6 ${className}`}
-      style={{ backgroundColor: `${HEX[bg].fill}14` }}
+      style={{ backgroundColor: `${HEX[bg].fill}50` }}
     >
       {children}
     </motion.section>

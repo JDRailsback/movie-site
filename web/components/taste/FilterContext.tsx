@@ -103,7 +103,7 @@ export function FilterBanner() {
           initial={{ y: -12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -12, opacity: 0 }}
-          className="brutal sticky top-4 z-30 mb-6 flex flex-wrap items-center gap-3 rounded-full bg-paper px-5 py-2"
+          className="brutal sticky top-4 z-30 mb-6 flex flex-wrap items-center gap-3 rounded-full bg-paper-deep px-5 py-2"
         >
           <span className="text-sm text-ink/70">
             Filtering by {DIM_NOUN[selection.dim]}{" "}

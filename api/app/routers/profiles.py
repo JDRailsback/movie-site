@@ -15,18 +15,23 @@ from app.schemas.models import FilmCard, FilmDatum, ProfileSummary, TasteProfile
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 
-def _uuid(profile_id: str) -> uuid.UUID:
-    try:
-        return uuid.UUID(profile_id)
-    except ValueError:
+async def _resolve(profile_id: str) -> uuid.UUID:
+    """Resolve a UUID string or Letterboxd username to a profile UUID."""
+    def _lookup() -> uuid.UUID | None:
+        with get_engine().connect() as conn:
+            return taste_repo.resolve_profile_id(conn, profile_id)
+
+    pid = await asyncio.to_thread(_lookup)
+    if pid is None:
         raise HTTPException(
             status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
-        ) from None
+        )
+    return pid
 
 
 @router.get("/{profile_id}")
 async def get_profile(profile_id: str) -> ProfileSummary:
-    pid = _uuid(profile_id)
+    pid = await _resolve(profile_id)
 
     def _read() -> dict[str, Any] | None:
         with get_engine().connect() as conn:
@@ -42,7 +47,7 @@ async def get_profile(profile_id: str) -> ProfileSummary:
 
 @router.get("/{profile_id}/taste")
 async def get_taste(profile_id: str) -> TasteProfile:
-    pid = _uuid(profile_id)
+    pid = await _resolve(profile_id)
 
     def _read() -> dict[str, Any] | None:
         with get_engine().connect() as conn:
@@ -73,7 +78,7 @@ async def get_taste(profile_id: str) -> TasteProfile:
 
 @router.get("/{profile_id}/films")
 async def get_films(profile_id: str) -> list[FilmDatum]:
-    pid = _uuid(profile_id)
+    pid = await _resolve(profile_id)
 
     def _read() -> list[dict[str, Any]]:
         with get_engine().connect() as conn:
@@ -85,7 +90,7 @@ async def get_films(profile_id: str) -> list[FilmDatum]:
 
 @router.get("/{profile_id}/recently-watched")
 async def recently_watched(profile_id: str, limit: int = 24) -> list[FilmCard]:
-    pid = _uuid(profile_id)
+    pid = await _resolve(profile_id)
 
     def _read() -> list[dict[str, Any]]:
         with get_engine().connect() as conn:

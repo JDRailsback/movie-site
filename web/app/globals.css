@@ -4,7 +4,7 @@
 
 body {
   @apply text-ink font-sans antialiased;
-  background-color: #fdf8e8; /* warm summer cream (light) */
+  background-color: #1c1c1e; /* slate dark */
 }
 
 /* pattern overlays kept as no-ops so any lingering refs are harmless */
@@ -15,14 +15,14 @@ body {
   background-image: none;
 }
 
-/* soft, minimal card + chip surfaces (was the brutalist outline+offset shadow) */
+/* soft, minimal card + chip surfaces — dark theme */
 .brutal {
-  border: 1px solid rgba(59, 50, 44, 0.08);
-  box-shadow: 0 1px 2px rgba(59, 50, 44, 0.04), 0 12px 32px -20px rgba(59, 50, 44, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -20px rgba(0, 0, 0, 0.5);
 }
 .brutal-sm {
-  border: 1px solid rgba(59, 50, 44, 0.07);
-  box-shadow: 0 1px 2px rgba(59, 50, 44, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Playful skeleton (PLAN §10: skeletons, never spinners) */
@@ -36,9 +36,18 @@ body {
 }
 .skeleton {
   @apply rounded-squircle;
-  background: linear-gradient(90deg, #f3e9d6 25%, #fbf6ec 37%, #f3e9d6 63%);
+  background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 37%, #2c2c2e 63%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease infinite;
+}
+
+/* Hide scrollbars while keeping scroll functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Respect reduced motion everywhere */

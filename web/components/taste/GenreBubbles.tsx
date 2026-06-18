@@ -5,7 +5,7 @@ import type { GenreAffinity } from "@/lib/api";
 import { HEX, pastelFor } from "@/lib/pastels";
 import { AnimatePresence, motion } from "framer-motion";
 
-const NEG = "#CDBDB0"; // muted clay for "not for you"
+const NEG = "#5A4848"; // muted warm for "not for you" on dark bg
 
 // Genre affinity as a sorted diverging bar chart — most-loved at the top, bars
 // reading right (love) / left (dislike). Tap a row to filter the whole hub and
@@ -36,15 +36,15 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
                   type="button"
                   key={g.name}
                   onClick={() => toggle("genre", g.name)}
-                  className="flex w-full items-center gap-3 rounded-md px-2 py-1 text-sm transition hover:bg-ink/5"
+                  className="flex w-full items-center gap-3 rounded-md px-2 py-1 text-sm transition hover:bg-ink/8"
                   style={{
                     opacity: dimmed ? 0.4 : 1,
-                    backgroundColor: isSel ? "rgba(59,50,44,0.06)" : undefined,
+                    backgroundColor: isSel ? "rgba(255,255,255,0.07)" : undefined,
                   }}
                 >
                   <span className="w-24 shrink-0 truncate text-right text-ink/75">{g.name}</span>
                   <div className="relative h-5 flex-1">
-                    <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-ink/12" />
+                    <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-ink/20" />
                     <motion.div
                       initial={{ width: 0 }}
                       whileInView={{ width: `${pct}%` }}
@@ -53,7 +53,7 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
                       className="absolute top-0.5 h-4 rounded"
                       style={
                         positive
-                          ? { left: "50%", backgroundColor: HEX[pastelFor(g.name)].fill }
+                          ? { left: "50%", backgroundColor: HEX[pastelFor(g.name)].deep }
                           : { right: "50%", backgroundColor: NEG }
                       }
                     />
@@ -75,8 +75,7 @@ export function GenreBubbles({ genres }: { genres: Record<string, GenreAffinity>
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
-            className="mt-4 rounded-xl bg-paper p-4"
-            style={{ boxShadow: "0 1px 2px rgba(59,50,44,0.06)" }}
+            className="mt-4 rounded-xl bg-paper-edge p-4"
           >
             <p className="mb-2 font-display text-base font-semibold text-ink">
               {selected.name}{" "}
@@ -102,14 +101,14 @@ function Signal({ label, v }: { label: string; v: number }) {
   return (
     <div className="flex items-center gap-2 py-0.5 text-[11px]">
       <span className="w-32 shrink-0 text-ink/55">{label}</span>
-      <div className="relative h-2 flex-1 rounded-full bg-ink/5">
-        <div className="absolute left-1/2 top-0 h-full w-px bg-ink/15" />
+      <div className="relative h-2 flex-1 rounded-full bg-ink/10">
+        <div className="absolute left-1/2 top-0 h-full w-px bg-ink/20" />
         <div
           className="absolute top-0 h-full rounded-full"
           style={
             v >= 0
-              ? { left: "50%", width: `${pct}%`, background: "#1F8A8A" }
-              : { right: "50%", width: `${pct}%`, background: "#C8502C" }
+              ? { left: "50%", width: `${pct}%`, background: "#78D8D8" }
+              : { right: "50%", width: `${pct}%`, background: "#F4A890" }
           }
         />
       </div>

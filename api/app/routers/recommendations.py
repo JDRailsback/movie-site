@@ -9,6 +9,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from app.config import get_settings
+from app.db.base import get_engine
+from app.repositories import taste_repo
 from app.routers._stub import not_implemented
 from app.schemas.models import Explanation, FilmCard, RecommendationItem, RecommendationSet
 from app.services import recommend_service
@@ -17,18 +19,26 @@ router = APIRouter(tags=["recommendations"])
 settings = get_settings()
 
 
+async def _resolve(profile_id: str) -> uuid.UUID:
+    def _lookup() -> uuid.UUID | None:
+        with get_engine().connect() as conn:
+            return taste_repo.resolve_profile_id(conn, profile_id)
+
+    pid = await asyncio.to_thread(_lookup)
+    if pid is None:
+        raise HTTPException(
+            status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
+        )
+    return pid
+
+
 @router.get("/profiles/{profile_id}/recs/{surface}")
 async def get_recs(
     profile_id: str,
     surface: str,
     limit: int = 24,
 ) -> RecommendationSet:
-    try:
-        pid = uuid.UUID(profile_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
-        ) from None
+    pid = await _resolve(profile_id)
     if surface not in recommend_service.SURFACES:
         raise HTTPException(
             status_code=404,

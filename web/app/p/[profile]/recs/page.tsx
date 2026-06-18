@@ -52,7 +52,7 @@ export default function RecsPage() {
       <div className="mx-auto max-w-[1200px] px-6 pt-12 sm:px-8">
         <header className="mb-10">
           <Link href={`/p/${profile}`} className="text-sm text-ink/50 hover:text-ink">
-            ← back to your map
+            ← back
           </Link>
           <h1 className="mt-3 font-display text-5xl font-semibold text-ink sm:text-6xl">
             Watch next

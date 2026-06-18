@@ -12,7 +12,7 @@ interface TileProps {
   delay?: number;
 }
 
-const SELECTED_RING = "0 0 0 2px #3B322C";
+const SELECTED_RING = "0 0 0 2px #AEAEB2";
 
 // ---------- Genre bubbles ----------
 export function GenreTile({ taste, delay }: TileProps) {
@@ -167,13 +167,13 @@ function Ring({
     <div className="flex w-full items-center gap-4">
       <div className="relative h-20 w-20 shrink-0">
         <svg aria-hidden="true" viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(59,50,44,0.08)" strokeWidth="9" />
+          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="9" />
           <motion.circle
             cx="50"
             cy="50"
             r={r}
             fill="none"
-            stroke={HEX[pastel].fill}
+            stroke={HEX[pastel].deep}
             strokeWidth="9"
             strokeLinecap="round"
             strokeDasharray={c}

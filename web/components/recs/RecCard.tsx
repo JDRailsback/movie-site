@@ -33,7 +33,7 @@ export function RecCard({
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-30px" }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="brutal relative flex flex-col overflow-hidden rounded-xl bg-paper"
+        className="brutal relative flex flex-col overflow-hidden rounded-xl bg-paper-deep"
       >
         <a
           href={`https://letterboxd.com/tmdb/${f.tmdbId}/`}
@@ -45,7 +45,7 @@ export function RecCard({
             <Poster path={f.posterPath} title={f.title} />
             {f.weightedRating != null && (
               <span className="absolute left-2 top-2 rounded-full bg-ink/75 px-2 py-0.5 text-xs font-medium text-paper">
-                ★ {f.weightedRating.toFixed(1)}
+                ★ {(f.weightedRating / 2).toFixed(1)}
               </span>
             )}
             <span className="absolute bottom-2 left-2 rounded-full bg-mint-deep/90 px-2 py-0.5 text-xs font-semibold text-paper">
