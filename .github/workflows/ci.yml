@@ -34,5 +34,6 @@ jobs:
           node-version: "22"
       - run: corepack enable
       - run: pnpm install
+      - run: pnpm exec biome check --fix --unsafe
       - run: pnpm lint
       - run: pnpm build   # also type-checks (generates next-env types)
