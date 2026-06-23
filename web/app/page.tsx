@@ -1,8 +1,5 @@
 "use client";
 
-// Landing (minimal). A clean drop zone for the export (primary) + a username
-// field (fallback).
-
 import { importByUsername, uploadExport } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { type DragEvent, useRef, useState } from "react";
@@ -34,83 +31,122 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 px-6 py-16 text-center">
-      <div className="space-y-3">
-        <h1 className="font-display text-5xl font-semibold text-ink">Reel</h1>
-        <p className="text-ink/60">
-          A map of your film taste — drawn from <em>your</em> ratings, not the crowd&apos;s.
-        </p>
-      </div>
+    <main
+      className="flex min-h-screen flex-col items-center justify-center px-6 py-16"
+      style={{ background: "#0a0a0a" }}
+    >
+      <div className="w-full max-w-sm space-y-10">
+        {/* Header */}
+        <div className="space-y-2 text-center">
+          <h1 className="font-display text-[5rem] italic font-light text-white leading-none tracking-tight">
+            Recs.
+          </h1>
+          <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.32)" }}>
+            Film recommendations drawn from your Letterboxd taste.
+          </p>
+        </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".zip"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) go(uploadExport(f));
-        }}
-      />
-
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => fileRef.current?.click()}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        className={`grid w-full place-items-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition ${
-          dragging ? "border-ink/40 bg-ink/5" : "border-ink/15 hover:border-ink/30"
-        } ${busy ? "opacity-60" : ""}`}
-      >
-        <span>
-          <span className="block font-display text-xl font-semibold text-ink">
-            {busy ? "Unspooling…" : dragging ? "Drop it" : "Drop your Letterboxd export"}
-          </span>
-          <span className="mt-1 block text-sm text-ink/45">or click to browse · .zip</span>
-        </span>
-      </button>
-
-      <div className="flex w-full items-center gap-3 text-xs uppercase tracking-widest text-ink/30">
-        <span className="h-px flex-1 bg-ink/10" />
-        or
-        <span className="h-px flex-1 bg-ink/10" />
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (username.trim()) go(importByUsername(username.trim()));
-        }}
-        className="flex w-full items-center gap-2"
-      >
+        {/* Drop zone */}
         <input
-          type="text"
-          value={username}
-          disabled={busy}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="letterboxd username"
-          className="h-11 flex-1 rounded-full border border-ink/15 bg-paper px-4 text-ink outline-none transition focus:border-ink/40"
+          ref={fileRef}
+          type="file"
+          accept=".zip"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) go(uploadExport(f));
+          }}
         />
+
         <button
-          type="submit"
-          disabled={busy || !username.trim()}
-          className="h-11 rounded-full bg-ink px-5 font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
+          type="button"
+          disabled={busy}
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          className="group w-full rounded-2xl border-2 border-dashed px-8 py-14 text-center transition-all duration-200"
+          style={{
+            borderColor: dragging
+              ? "rgba(255,255,255,0.5)"
+              : busy
+                ? "rgba(255,255,255,0.06)"
+                : "rgba(255,255,255,0.12)",
+            background: dragging
+              ? "rgba(255,255,255,0.05)"
+              : "transparent",
+            opacity: busy ? 0.5 : 1,
+          }}
         >
-          Go
+          <span className="block font-display text-2xl italic font-light text-white">
+            {busy ? "Loading…" : dragging ? "Drop it" : "Drop your export"}
+          </span>
+          <span className="mt-1.5 block text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+            {busy
+              ? "Starting import…"
+              : "Letterboxd → Settings → Data → Export · .zip"}
+          </span>
         </button>
-      </form>
 
-      {error && <p className="text-sm text-coral-deep">{error}</p>}
+        {/* Divider */}
+        <div
+          className="flex items-center gap-4 text-[10px] uppercase tracking-[0.2em]"
+          style={{ color: "rgba(255,255,255,0.18)" }}
+        >
+          <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
+          or
+          <span className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
+        </div>
 
-      <p className="text-xs text-ink/40">
-        Tip: Letterboxd → Settings → Data → Export. Uploading is faster and more complete than a
-        username lookup.
-      </p>
+        {/* Username form */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (username.trim()) go(importByUsername(username.trim()));
+          }}
+          className="flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={username}
+            disabled={busy}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Letterboxd username"
+            className="h-11 flex-1 rounded-full px-4 text-[13px] text-white placeholder:text-white/25 outline-none transition-colors"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLInputElement).style.borderColor = "rgba(255,255,255,0.2)";
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLInputElement).style.borderColor = "rgba(255,255,255,0.09)";
+            }}
+          />
+          <button
+            type="submit"
+            disabled={busy || !username.trim()}
+            className="h-11 rounded-full px-5 text-[13px] font-medium transition-opacity"
+            style={{
+              background: "#fff",
+              color: "#0a0a0a",
+              opacity: busy || !username.trim() ? 0.35 : 1,
+            }}
+          >
+            Go
+          </button>
+        </form>
+
+        {error && (
+          <p className="text-center text-[13px]" style={{ color: "rgba(255,80,80,0.85)" }}>
+            {error}
+          </p>
+        )}
+      </div>
     </main>
   );
 }

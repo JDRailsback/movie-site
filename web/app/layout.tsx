@@ -13,9 +13,9 @@ const display = Fraunces({
 const sans = Nunito({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Reel — a playful map of your film taste",
+  title: "Recs — personalized film recommendations",
   description:
-    "A whimsical discovery layer on top of Letterboxd: explainable, personalized film recommendations drawn from your own taste.",
+    "Personalized film recommendations drawn from your Letterboxd taste.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -28,6 +28,8 @@ class Candidate:
     directors: list[int] = field(default_factory=list)
     keywords: list[int] = field(default_factory=list)
     countries: list[str] = field(default_factory=list)
+    lb_rating: float | None = None
+    lb_watch_count: int | None = None
 
 
 @dataclass
@@ -47,7 +49,7 @@ class Taste:
 # One unified scoring lens across all surfaces (sum ~1): a film's taste-fit score
 # — and therefore its "% match" — is identical in every category. The surfaces
 # differ only by which films are eligible (the popularity gate), not how they are
-# scored. (collaborative deferred to Phase 3)
+# scored.
 _BASE_WEIGHTS = {"q": 0.34, "g": 0.22, "d": 0.16, "k": 0.14, "e": 0.06, "c": 0.05, "r": 0.03}
 WEIGHTS: dict[str, dict[str, float]] = {
     "overall": _BASE_WEIGHTS,
@@ -77,7 +79,11 @@ def score(c: Candidate, t: Taste, w: dict[str, float]) -> tuple[float, dict[str,
     keyword = min(sum(t.keyword.get(k, 0.0) for k in c.keywords), 1.0)
     era = t.era.get(c.decade, 0.0) if c.decade is not None else 0.0
     country = max((t.country.get(cc, 0.0) for cc in c.countries), default=0.0)
-    quality = max(0.0, min(c.weighted_rating / 10.0, 1.0))
+    quality = (
+        c.lb_rating / 5.0
+        if c.lb_rating is not None
+        else max(0.0, min(c.weighted_rating / 10.0, 1.0))
+    )
     runtime = _runtime_fit(c.runtime_min, t.runtime_pref, t.runtime_sd)
 
     contrib = {
@@ -99,35 +105,29 @@ def score(c: Candidate, t: Taste, w: dict[str, float]) -> tuple[float, dict[str,
     return total, contrib
 
 
-def fit_percent(score: float) -> int:
+def fit_percent(score: float, surface: str = "overall") -> int:
     """Map a raw fit score to an intuitive 0-100 "% match".
 
-    No film maxes every dimension (top genre + top director + every theme +
-    perfect runtime + top rating at once), so theoretical-perfect ~1.0 is never
-    reached and real top picks land near ~0.67. We therefore anchor the upper
-    end of the scale to that realistically-achievable band so the strongest
-    recommendations read in the high 90s, not the theoretical ceiling. A linear
-    lerp between the two anchors keeps the ranking's differences visible.
+    No film maxes every dimension at once, so realistic top picks land around
+    ~0.67. We anchor the upper end there so strong recommendations read in the
+    high 90s without artificially manufacturing 100% badges.
     """
-    lo_s, lo_p = 0.30, 50.0  # a marginal fit reads as ~50%
-    hi_s, hi_p = 0.67, 98.0  # the strongest realistic fit approaches 100%
+    lo_s, lo_p = 0.30, 50.0
+    hi_s, hi_p = 0.67, 98.0
     pct = lo_p + (score - lo_s) * (hi_p - lo_p) / (hi_s - lo_s)
     return max(0, min(100, round(pct)))
 
 
 def _explain(c: Candidate, t: Taste, surface: str) -> dict[str, Any]:
     reasons: list[str] = []
-    # director
     best_dir = max(c.directors, key=lambda d: t.director.get(d, -9), default=None)
     if best_dir is not None and t.director.get(best_dir, 0) > 0.2:
         reasons.append(f"By {t.director_names.get(best_dir, 'a director')} — you rate them highly")
-    # genre
     liked_genres = [
         t.genre_names[g] for g in c.genres if t.genre.get(g, 0) > 0.1 and g in t.genre_names
     ]
     if liked_genres:
         reasons.append(f"Matches your love of {', '.join(liked_genres[:2])}")
-    # keywords
     kw_hits = sorted(
         (k for k in c.keywords if k in t.keyword),
         key=lambda k: t.keyword.get(k, 0.0),
@@ -136,32 +136,30 @@ def _explain(c: Candidate, t: Taste, surface: str) -> dict[str, Any]:
     kw_names = [t.keyword_names[k] for k in kw_hits[:3] if k in t.keyword_names]
     if kw_names:
         reasons.append(f"Themes you gravitate toward: {', '.join(kw_names)}")
-    # quality — the rating badge on the poster already conveys this, so no reason line
     if not reasons:
         reasons.append("A fit for your overall taste")
     return {"source": surface, "reasons": reasons[:3]}
 
 
-def _gate(c: Candidate, surface: str, _pop_threshold: float = 0.0) -> bool:
+def _gate(c: Candidate, surface: str) -> bool:
     if surface == "overall":
-        # best taste-fit across the whole pool, any popularity tier; a light
-        # vote-count + quality floor keeps out obscure low-confidence noise.
         return c.vote_count >= 300 and c.weighted_rating >= 6.0
+
     if surface == "blind_spots":
-        # rating is the primary signal — 7.8 floor keeps this genuinely acclaimed.
-        # 5k vote floor is enough to trust the score without requiring blockbuster
-        # audiences, so films like Mulholland Drive or The Lighthouse can appear.
+        if c.lb_watch_count is not None and c.lb_rating is not None:
+            return c.lb_watch_count >= 150_000 and c.lb_rating >= 3.9
+        # Fallback for films not yet LB-enriched
         return c.vote_count >= 5_000 and c.weighted_rating >= 7.8
+
     if surface == "hidden_gems":
-        # obscure but genuinely good: at least 10 years old so this doesn't
-        # overlap with recent releases; quality + vote floors filter niche noise.
         cutoff_year = datetime.now().year - 10
-        return (
-            c.weighted_rating >= 7.2
-            and 500 <= c.vote_count <= 3000
-            and c.year is not None
-            and c.year <= cutoff_year
-        )
+        if c.year is None or c.year > cutoff_year:
+            return False
+        if c.lb_watch_count is not None and c.lb_rating is not None:
+            return c.lb_rating >= 3.8 and 1_000 <= c.lb_watch_count <= 30_000
+        # Fallback for films not yet LB-enriched
+        return c.weighted_rating >= 7.2 and 500 <= c.vote_count <= 3_000
+
     return True
 
 
@@ -170,23 +168,36 @@ def recommend(
 ) -> list[dict[str, Any]]:
     w = WEIGHTS.get(surface, WEIGHTS["blind_spots"])
 
-    gated = [c for c in candidates if _gate(c, surface, 0.0)]
+    gated = [c for c in candidates if _gate(c, surface)]
     scored: list[tuple[float, Candidate, dict[str, float]]] = []
     for c in gated:
         s, contrib = score(c, taste, w)
         scored.append((s, c, contrib))
 
     if surface == "blind_spots":
-        # light taste-fit floor avoids actively-disliked genres; rank by
-        # weighted_rating descending so the most acclaimed films surface first
-        # (pure vote_count favours franchise blockbusters over prestige films).
-        scored = [(s, c, contrib) for s, c, contrib in scored if s >= 0.35]
-        scored.sort(key=lambda x: x[1].weighted_rating, reverse=True)
+        # 80% fit floor — films you'd actively dislike don't appear regardless of acclaim.
+        scored = [(s, c, contrib) for s, c, contrib in scored if fit_percent(s) >= 80]
+        # Quality-dominant blend: lb_rating leads, taste score breaks close ties.
+        # α=1.0 means a 0.1-point rating gap needs ~13% taste difference to be overridden;
+        # a 0.2-point gap can never be overcome (max taste spread with 80% floor is ~18%).
+        scored.sort(
+            key=lambda x: (
+                (x[1].lb_rating if x[1].lb_rating is not None else x[1].weighted_rating / 2)
+                + 1.0 * x[0]
+            ),
+            reverse=True,
+        )
     elif surface == "hidden_gems":
-        # higher taste-fit floor than before keeps niche-but-mismatched titles out,
-        # then rank by vote_count ascending (most obscure first).
-        scored = [(s, c, contrib) for s, c, contrib in scored if s >= 0.44]
-        scored.sort(key=lambda x: x[1].vote_count)
+        # Taste-dominant blend: lb_rating adds a quality tie-break so two equally
+        # taste-matched films resolve in favour of the better-rated one.
+        scored = [(s, c, contrib) for s, c, contrib in scored if fit_percent(s) >= 75]
+        scored.sort(
+            key=lambda x: (
+                x[0]
+                + 0.3 * (x[1].lb_rating / 5.0 if x[1].lb_rating is not None else x[1].weighted_rating / 10.0)
+            ),
+            reverse=True,
+        )
     else:
         scored.sort(key=lambda x: x[0], reverse=True)
 

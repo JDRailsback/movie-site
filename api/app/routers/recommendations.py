@@ -72,6 +72,10 @@ async def get_recs(
                     runtime_min=it["candidate"].runtime_min,
                     weighted_rating=round(it["candidate"].weighted_rating, 2),
                     genres=it["candidate"].genre_names,
+                    lb_rating=round(it["candidate"].lb_rating, 2)
+                    if it["candidate"].lb_rating is not None
+                    else None,
+                    lb_watch_count=it["candidate"].lb_watch_count,
                 ),
                 rank=i + 1,
                 score=it["score"],

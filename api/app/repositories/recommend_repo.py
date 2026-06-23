@@ -6,7 +6,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy import Connection, select
+from sqlalchemy import Connection, or_, select
 
 from app.db import tables as t
 from app.domain.recommend import Candidate, Taste
@@ -43,9 +43,15 @@ def load_taste(conn: Connection, profile_id: uuid.UUID) -> Taste | None:
 
 
 def excluded_film_ids(conn: Connection, profile_id: uuid.UUID) -> set[int]:
-    """Films the user has already watched or watchlisted, plus 'not interested'."""
+    """Films the user has already watched, plus 'not interested'. Watchlist-only entries are NOT excluded."""
     watched = conn.execute(
-        select(t.user_film_rating.c.film_id).where(t.user_film_rating.c.profile_id == profile_id)
+        select(t.user_film_rating.c.film_id).where(
+            t.user_film_rating.c.profile_id == profile_id,
+            or_(
+                t.user_film_rating.c.watched_date.is_not(None),
+                t.user_film_rating.c.rating_0_10.is_not(None),
+            ),
+        )
     )
     out = {r[0] for r in watched}
     not_int = conn.execute(
@@ -60,6 +66,12 @@ def excluded_film_ids(conn: Connection, profile_id: uuid.UUID) -> set[int]:
 
 def load_candidates(conn: Connection, exclude: set[int]) -> list[Candidate]:
     film = t.film
+    # TMDB genre IDs excluded from all recommendation surfaces:
+    #   99    = Documentary
+    #   10402 = Music (concert films, music videos, music documentaries)
+    #   10751 = Family (kids films)
+    _EXCLUDED_GENRE_IDS = [99, 10402, 10751]
+
     rows = conn.execute(
         select(
             film.c.tmdb_id,
@@ -70,10 +82,20 @@ def load_candidates(conn: Connection, exclude: set[int]) -> list[Candidate]:
             film.c.weighted_rating,
             film.c.vote_count,
             film.c.popularity,
+            film.c.lb_rating,
+            film.c.lb_watch_count,
         ).where(
             film.c.weighted_rating.is_not(None),
             film.c.vote_count.is_not(None),
             film.c.adult.is_not(True),
+            # Exclude short films; allow NULL runtime (data gap, not necessarily short)
+            or_(film.c.runtime_min.is_(None), film.c.runtime_min >= 40),
+            # Exclude concert films / music-only content by genre
+            film.c.tmdb_id.not_in(
+                select(t.film_genre.c.film_id).where(
+                    t.film_genre.c.genre_id.in_(_EXCLUDED_GENRE_IDS)
+                )
+            ),
         )
     ).all()
 
@@ -91,6 +113,8 @@ def load_candidates(conn: Connection, exclude: set[int]) -> list[Candidate]:
             vote_count=int(r.vote_count),
             popularity=float(r.popularity or 0.0),
             decade=(r.year - r.year % 10) if r.year else None,
+            lb_rating=float(r.lb_rating) if r.lb_rating is not None else None,
+            lb_watch_count=int(r.lb_watch_count) if r.lb_watch_count is not None else None,
         )
     if not cands:
         return []

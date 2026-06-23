@@ -46,8 +46,7 @@ def test_blind_spots_rank_taste_fit_high() -> None:
 
 def test_disliked_genre_is_damped() -> None:
     horror = _cand(2, genres=[2], directors=[], keywords=[], weighted_rating=9.0)
-    # hated genre (-0.8 affinity) + damping drops score below the taste-fit floor;
-    # the film is excluded from blind_spots entirely rather than shown with a low score.
+    # Strongly disliked genre scores well below the 80% taste floor → excluded.
     assert recommend([horror], _taste(), "blind_spots") == []
 
 
@@ -73,3 +72,11 @@ def test_recommend_emits_fit_in_match_range() -> None:
     [item] = recommend([_cand(1)], _taste(), "blind_spots")
     assert isinstance(item["fit"], int)
     assert 0 <= item["fit"] <= 100
+
+
+def test_director_cap_limits_per_director() -> None:
+    # More than 3 films from the same director: only 3 should appear.
+    cands = [_cand(i, genres=[i], directors=[100]) for i in range(1, 8)]
+    items = recommend(cands, _taste(), "overall")
+    director_count = sum(1 for it in items if 100 in it["candidate"].directors)
+    assert director_count <= 3

@@ -41,6 +41,13 @@ film = Table(
     Column("adult", Boolean),
     Column("status", Text),
     Column("enriched_at", TIMESTAMP(timezone=True)),
+    Column("lb_slug", Text),
+    Column("lb_rating", REAL),
+    Column("lb_rating_count", Integer),
+    Column("lb_watch_count", Integer),
+    Column("lb_list_count", Integer),
+    Column("lb_fan_count", Integer),
+    Column("lb_enriched_at", TIMESTAMP(timezone=True)),
 )
 
 genre = Table(

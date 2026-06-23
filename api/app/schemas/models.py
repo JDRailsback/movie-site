@@ -92,6 +92,8 @@ class FilmCard(ApiModel):
     your_rating: int | None = None
     genres: list[str] = Field(default_factory=list)
     streaming: list[StreamingOffer] = Field(default_factory=list)
+    lb_rating: float | None = None  # 0.5–5.0 Letterboxd average rating
+    lb_watch_count: int | None = None  # LB members who've watched
 
 
 class FilmDatum(ApiModel):

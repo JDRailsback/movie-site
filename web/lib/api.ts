@@ -119,6 +119,8 @@ export interface FilmCard {
   weightedRating?: number | null;
   yourRating?: number | null;
   genres?: string[];
+  lbRating?: number | null;
+  lbWatchCount?: number | null;
 }
 
 export interface FilmDatum {
@@ -183,6 +185,14 @@ export async function getRecs(profileId: string, surface: string): Promise<Recom
   return unwrap<RecommendationSet>(
     await fetch(`${API_BASE}/profiles/${profileId}/recs/${surface}`),
   );
+}
+
+export async function getDismissed(profileId: string): Promise<FilmCard[]> {
+  return unwrap<FilmCard[]>(await fetch(`${API_BASE}/profiles/${profileId}/dismissed`));
+}
+
+export async function removeDismissed(profileId: string, tmdbId: number): Promise<void> {
+  await fetch(`${API_BASE}/profiles/${profileId}/dismissed/${tmdbId}`, { method: "DELETE" });
 }
 
 export async function sendFeedback(

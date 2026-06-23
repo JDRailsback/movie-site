@@ -2,10 +2,14 @@
 
 import { RecCard } from "@/components/recs/RecCard";
 import type { RecItem } from "@/lib/api";
-import { useRef } from "react";
+import { useSettings } from "@/lib/settings";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-// A single horizontal row of recommendations. Arrow buttons page the track
-// left/right; trackpad/drag scrolling still works. Scrollbar is hidden.
+const CARD_WIDTH: Record<string, string> = {
+  comfortable: "w-44",
+  compact: "w-32",
+};
+
 export function RecRow({
   items,
   profileId,
@@ -18,40 +22,84 @@ export function RecRow({
   onRemove: (tmdbId: number) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const [settings] = useSettings();
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(true);
+  const cardWidth = CARD_WIDTH[settings.cardDensity] ?? "w-44";
+
+  const syncArrows = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    syncArrows();
+    const el = trackRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", syncArrows, { passive: true });
+    return () => el.removeEventListener("scroll", syncArrows);
+  }, [syncArrows]);
 
   function scroll(dir: 1 | -1) {
     const el = trackRef.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: "smooth" });
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: "smooth" });
   }
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => scroll(-1)}
-        aria-label="Scroll left"
-        className="absolute -left-3 top-[38%] z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-ink/10 bg-paper text-xl text-ink shadow-md transition hover:bg-paper/80"
-      >
-        ‹
-      </button>
+      {/* Left fade — only when scrolled past start */}
+      {canLeft && (
+        <div
+          className="pointer-events-none absolute left-0 top-0 z-10 flex h-full w-14 items-center justify-start"
+          style={{ background: "linear-gradient(to right, #0a0a0a 30%, transparent)" }}
+        >
+          <button
+            type="button"
+            onClick={() => scroll(-1)}
+            aria-label="Scroll left"
+            className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full text-base transition-all duration-150 text-white/40 hover:text-white/90 hover:bg-white/[0.08]"
+          >
+            ‹
+          </button>
+        </div>
+      )}
+
+      {/* Scrolling track */}
       <div
         ref={trackRef}
-        className="flex snap-x gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((it) => (
-          <div key={it.film.tmdbId} className="w-44 shrink-0 snap-start">
-            <RecCard item={it} profileId={profileId} surface={surface} onRemove={onRemove} />
+          <div key={it.film.tmdbId} className={`${cardWidth} shrink-0`}>
+            <RecCard
+              item={it}
+              profileId={profileId}
+              surface={surface}
+              showFitBadge={settings.showFitBadge}
+              onRemove={onRemove}
+            />
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={() => scroll(1)}
-        aria-label="Scroll right"
-        className="absolute -right-3 top-[38%] z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-ink/10 bg-paper text-xl text-ink shadow-md transition hover:bg-paper/80"
-      >
-        ›
-      </button>
+
+      {/* Right fade — only when more content to the right */}
+      {canRight && (
+        <div
+          className="pointer-events-none absolute right-0 top-0 z-10 flex h-full w-14 items-center justify-end"
+          style={{ background: "linear-gradient(to left, #0a0a0a 30%, transparent)" }}
+        >
+          <button
+            type="button"
+            onClick={() => scroll(1)}
+            aria-label="Scroll right"
+            className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full text-base transition-all duration-150 text-white/40 hover:text-white/90 hover:bg-white/[0.08]"
+          >
+            ›
+          </button>
+        </div>
+      )}
     </div>
   );
 }

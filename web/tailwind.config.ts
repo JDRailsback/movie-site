@@ -7,8 +7,8 @@ const config: Config = {
     extend: {
       colors: {
         // paper = dark surfaces, ink = light text
-        paper: { DEFAULT: "#1C1C1E", deep: "#2C2C2E", edge: "#3A3A3C" },
-        ink: { DEFAULT: "#F0F0EE", soft: "#AEAEB2", faint: "#636366" },
+        paper: { DEFAULT: "#111111", deep: "#0a0a0a", edge: "#1e1e1e" },
+        ink: { DEFAULT: "#E8E8E8", soft: "#777777", faint: "#3d3d3d" },
         // Dark-tinted pastel surfaces (fill) + bright readable labels (deep).
         // Sync HEX values with pastels.ts.
         blush: { DEFAULT: "#4A2030", deep: "#F4B0C8" },

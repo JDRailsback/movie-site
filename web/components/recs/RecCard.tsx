@@ -1,24 +1,23 @@
 "use client";
 
-import { Poster } from "@/components/film/Poster";
-import { type RecItem, sendFeedback } from "@/lib/api";
+import { type RecItem, posterUrl, sendFeedback } from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
 
-// A recommendation card: poster, title and genres, linking out to the film's
-// Letterboxd page in a new tab. The ✕ overlay dismisses it ("not for me"),
-// removing the card and excluding the film from future recs.
 export function RecCard({
   item,
   profileId,
   surface,
+  showFitBadge,
   onRemove,
 }: {
   item: RecItem;
   profileId: string;
   surface: string;
+  showFitBadge?: boolean;
   onRemove: (tmdbId: number) => void;
 }) {
   const f = item.film;
+  const url = posterUrl(f.posterPath);
 
   function dismiss() {
     sendFeedback(profileId, f.tmdbId, "not_interested", surface);
@@ -29,52 +28,95 @@ export function RecCard({
     <AnimatePresence>
       <motion.div
         layout
-        initial={{ opacity: 0, y: 16, scale: 0.96 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        viewport={{ once: true, margin: "-30px" }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="brutal relative flex flex-col overflow-hidden rounded-xl bg-paper-deep"
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-20px" }}
+        exit={{ opacity: 0, scale: 0.88, transition: { duration: 0.15 } }}
+        transition={{ duration: 0.2 }}
+        className="group relative"
       >
         <a
           href={`https://letterboxd.com/tmdb/${f.tmdbId}/`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 flex-col"
+          className="flex flex-col"
         >
-          <div className="relative">
-            <Poster path={f.posterPath} title={f.title} />
-            {f.weightedRating != null && (
-              <span className="absolute left-2 top-2 rounded-full bg-ink/75 px-2 py-0.5 text-xs font-medium text-paper">
-                ★ {(f.weightedRating / 2).toFixed(1)}
-              </span>
+          {/* Poster */}
+          <div
+            className="relative w-full overflow-hidden rounded-sm"
+            style={{ aspectRatio: "2/3", background: "rgba(255,255,255,0.05)" }}
+          >
+            {url ? (
+              <img
+                src={url}
+                alt={f.title}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+              />
+            ) : (
+              <div className="flex h-full items-end p-2">
+                <span
+                  className="line-clamp-3 text-[9px] leading-tight"
+                  style={{ color: "rgba(255,255,255,0.3)" }}
+                >
+                  {f.title}
+                </span>
+              </div>
             )}
-            <span className="absolute bottom-2 left-2 rounded-full bg-mint-deep/90 px-2 py-0.5 text-xs font-semibold text-paper">
-              {item.fit}% match
-            </span>
-          </div>
 
-          <div className="flex flex-1 flex-col gap-2 p-3">
-            <h3 className="font-display text-base font-semibold leading-tight text-ink">
-              {f.title} <span className="text-sm font-normal text-ink/45">{f.year}</span>
-            </h3>
-            {f.genres && f.genres.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {f.genres.map((g) => (
-                  <span key={g} className="rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink/60">
-                    {g}
-                  </span>
-                ))}
+            {/* Subtle bottom gradient on hover for depth */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 45%)",
+              }}
+            />
+
+            {/* Fit badge */}
+            {showFitBadge !== false && (
+              <div className="absolute bottom-2 left-2">
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
+                  style={{
+                    background: "rgba(0,0,0,0.65)",
+                    color: "rgba(255,255,255,0.75)",
+                    backdropFilter: "blur(4px)",
+                  }}
+                >
+                  {item.fit}%
+                </span>
               </div>
             )}
           </div>
+
+          {/* Meta below poster */}
+          <div className="mt-2 px-0.5">
+            <p className="truncate text-[12px] font-medium text-white leading-tight">
+              {f.title}
+            </p>
+            <p className="mt-0.5 text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+              {f.year ?? ""}
+              {f.lbRating != null ? (
+                <span> · ★ {f.lbRating.toFixed(1)}</span>
+              ) : f.weightedRating != null ? (
+                <span> · ★ {(f.weightedRating / 2).toFixed(1)}</span>
+              ) : null}
+            </p>
+          </div>
         </a>
 
+        {/* Dismiss button */}
         <button
           type="button"
           onClick={dismiss}
           aria-label="Not for me"
           title="Not for me"
-          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-ink/55 text-sm text-paper transition hover:bg-ink/80"
+          className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full text-[11px] transition-all duration-150 opacity-0 group-hover:opacity-100 hover:scale-110"
+          style={{
+            background: "rgba(0,0,0,0.72)",
+            color: "rgba(255,255,255,0.8)",
+            backdropFilter: "blur(4px)",
+          }}
         >
           ✕
         </button>
