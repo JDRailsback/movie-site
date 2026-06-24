@@ -16,6 +16,7 @@ def get_or_create_profile(
     conn: Connection, username: str, *, source: str
 ) -> tuple[uuid.UUID, uuid.UUID]:
     """Upsert the profile by username and open a new queued import. Returns ids."""
+    username = username.lower()
     pid = uuid.uuid4()
     stmt = (
         insert(t.letterboxd_profile)

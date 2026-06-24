@@ -87,7 +87,7 @@ class LbProfileScraper:
                 break
             for rec in items:
                 records.setdefault(rec.lb_uri, rec)
-            if not _has_next(soup):
+            if not _has_next(soup, next_page=page + 1):
                 break
             page += 1
             await asyncio.sleep(_PAGE_DELAY)
@@ -112,7 +112,7 @@ class LbProfileScraper:
                 break
             for rec in items:
                 records.setdefault(rec.lb_uri, rec)
-            if not _has_next(soup):
+            if not _has_next(soup, next_page=page + 1):
                 break
             page += 1
             await asyncio.sleep(_PAGE_DELAY)
@@ -198,6 +198,12 @@ def _parse_film_grid(soup: BeautifulSoup, *, watched: bool) -> list[FilmRecord]:
     return records
 
 
-def _has_next(soup: BeautifulSoup) -> bool:
-    """True if the page has a next-page pagination link."""
-    return bool(soup.find("a", class_="next"))
+def _has_next(soup: BeautifulSoup, *, next_page: int) -> bool:
+    """True if the page links to the next paginated page.
+
+    Checks for a link containing /page/{next_page}/ in the href — robust
+    against Letterboxd changing their pagination CSS class names.
+    """
+    return bool(soup.find("a", href=re.compile(rf"/page/{next_page}/"))) or bool(
+        soup.find("a", class_="next")
+    )

@@ -171,7 +171,7 @@ def resolve_profile_id(conn: Connection, profile_id_or_username: str) -> uuid.UU
     row = (
         conn.execute(
             select(t.letterboxd_profile.c.id).where(
-                t.letterboxd_profile.c.username == profile_id_or_username
+                t.letterboxd_profile.c.username == profile_id_or_username.lower()
             )
         )
         .mappings()
