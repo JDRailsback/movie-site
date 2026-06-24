@@ -142,6 +142,11 @@ export async function getProfileSummary(profileId: string): Promise<ProfileSumma
   return unwrap<ProfileSummary>(await fetch(`${API_BASE}/profiles/${profileId}`));
 }
 
+export async function refreshProfile(profileId: string): Promise<ImportCreated> {
+  const res = await fetch(`${API_BASE}/profiles/${profileId}/refresh`, { method: "POST" });
+  return unwrap<ImportCreated>(res);
+}
+
 export async function getFilms(profileId: string): Promise<FilmDatum[]> {
   return unwrap<FilmDatum[]>(await fetch(`${API_BASE}/profiles/${profileId}/films`));
 }

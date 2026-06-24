@@ -6,11 +6,12 @@ import asyncio
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from app.db.base import get_engine
-from app.repositories import taste_repo
-from app.schemas.models import FilmCard, FilmDatum, ProfileSummary, TasteProfile
+from app.repositories import profile_repo, taste_repo
+from app.schemas.models import FilmCard, FilmDatum, ImportCreated, ProfileSummary, TasteProfile
+from app.services.import_pipeline import SCRAPE_KEY
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -28,6 +29,34 @@ async def _resolve(profile_id: str) -> uuid.UUID:
             status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
         )
     return pid
+
+
+@router.post("/{profile_id}/refresh", status_code=202)
+async def refresh_profile(request: Request, profile_id: str) -> ImportCreated:
+    """Trigger a fresh Letterboxd scrape for this profile."""
+    pid = await _resolve(profile_id)
+
+    def _get_username() -> str | None:
+        with get_engine().connect() as conn:
+            row = taste_repo.get_profile_summary(conn, pid)
+        return row["username"] if row else None
+
+    username = await asyncio.to_thread(_get_username)
+    if not username:
+        raise HTTPException(
+            status_code=404, detail={"error": {"code": "not_found", "message": "profile not found"}}
+        )
+
+    def _create_import() -> tuple[uuid.UUID, uuid.UUID]:
+        with get_engine().begin() as conn:
+            return profile_repo.get_or_create_profile(conn, username, source="scrape")
+
+    _, import_id = await asyncio.to_thread(_create_import)
+    await request.app.state.redis.set(
+        SCRAPE_KEY.format(import_id=import_id), username, ex=3600
+    )
+    await request.app.state.arq.enqueue_job("run_import", str(import_id))
+    return ImportCreated(import_id=str(import_id), profile_id=str(pid))
 
 
 @router.get("/{profile_id}")

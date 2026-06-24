@@ -1,9 +1,17 @@
 "use client";
 
-import { type FilmCard, getDismissed, posterUrl, removeDismissed } from "@/lib/api";
+import {
+  type FilmCard,
+  type ProfileSummary,
+  getDismissed,
+  getProfileSummary,
+  posterUrl,
+  refreshProfile,
+  removeDismissed,
+} from "@/lib/api";
 import { type Settings, useSettings } from "@/lib/settings";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const EDGE = "rgba(255,255,255,0.06)";
@@ -87,22 +95,45 @@ function SettingRow({
   );
 }
 
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return "Never";
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function SettingsPage() {
   const { profile } = useParams<{ profile: string }>();
+  const router = useRouter();
   const [settings, updateSettings] = useSettings();
   const [dismissed, setDismissed] = useState<FilmCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<ProfileSummary | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    getDismissed(profile)
-      .then(setDismissed)
-      .catch(() => setDismissed([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      getDismissed(profile).catch(() => [] as FilmCard[]),
+      getProfileSummary(profile).catch(() => null),
+    ]).then(([d, s]) => {
+      setDismissed(d);
+      setSummary(s);
+      setLoading(false);
+    });
   }, [profile]);
 
   function restore(tmdbId: number) {
     removeDismissed(profile, tmdbId).catch(() => null);
     setDismissed((prev) => prev.filter((f) => f.tmdbId !== tmdbId));
+  }
+
+  function sync() {
+    setSyncing(true);
+    refreshProfile(profile)
+      .then(({ importId, profileId }) => router.push(`/import/${importId}?profile=${profileId}`))
+      .catch(() => setSyncing(false));
   }
 
   return (
@@ -241,20 +272,67 @@ export default function SettingsPage() {
           )}
         </section>
 
-        {/* Data */}
+        {/* Library */}
         <section className="mt-14">
-          <SectionDivider>Data</SectionDivider>
+          <SectionDivider>Library</SectionDivider>
+
+          {/* Stats row */}
+          <div
+            className="flex items-center gap-8 py-5 mb-1"
+            style={{ borderBottom: `1px solid ${EDGE}` }}
+          >
+            <div>
+              <p className="text-[22px] font-light text-white tabular-nums">
+                {summary ? summary.filmCount.toLocaleString() : "—"}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+                films imported
+              </p>
+            </div>
+            <div className="self-stretch w-px" style={{ background: EDGE }} />
+            <div>
+              <p className="text-[22px] font-light text-white">
+                {summary ? formatDate(summary.lastImportAt) : "—"}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+                last sync
+              </p>
+            </div>
+          </div>
+
           <div>
             <SettingRow
-              label="Re-import library"
-              description="Upload a newer Letterboxd export to add films and refresh your recommendations."
+              label="Sync from Letterboxd"
+              description="Pull your latest watches and ratings directly from your public Letterboxd profile."
+            >
+              <button
+                type="button"
+                onClick={sync}
+                disabled={syncing}
+                className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-opacity"
+                style={{
+                  background: "#fff",
+                  color: "#0a0a0a",
+                  opacity: syncing ? 0.4 : 1,
+                }}
+              >
+                {syncing ? "Starting…" : "Sync now"}
+              </button>
+            </SettingRow>
+            <SettingRow
+              label="Import from export"
+              description="Upload a Letterboxd data export ZIP for the most complete history including diary dates."
             >
               <Link
                 href="/"
                 className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-opacity hover:opacity-80"
-                style={{ background: "#fff", color: "#0a0a0a" }}
+                style={{
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.55)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                }}
               >
-                Go to Import
+                Upload ZIP
               </Link>
             </SettingRow>
           </div>
