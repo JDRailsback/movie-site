@@ -30,6 +30,7 @@ settings = get_settings()
 MATCH_THRESHOLD = 0.80
 IMPORT_CORPUS_MEAN = 6.3
 ZIP_KEY = "import:{import_id}:zip"
+SCRAPE_KEY = "import:{import_id}:scrape_username"
 
 
 async def run_pipeline(import_id: str, redis: Any, tmdb: TMDBClient) -> None:
@@ -40,13 +41,28 @@ async def run_pipeline(import_id: str, redis: Any, tmdb: TMDBClient) -> None:
         await progress.publish(redis, import_id, {"status": status, **counts})
 
     try:
-        # --- fetching: load + parse the export ---
+        # --- fetching: load + parse the export or scrape the profile ---
         await stage("fetching")
-        raw = await redis.get(ZIP_KEY.format(import_id=import_id))
-        if raw is None:
-            raise RuntimeError("export bytes not found (expired before processing)")
-        parsed: ParsedExport = parse_export(raw)
-        profile_id = await asyncio.to_thread(_profile_id_for, iid)
+        import_row = await asyncio.to_thread(_get_import_row, iid)
+        profile_id = cast(uuid.UUID, import_row["profile_id"])
+        source = str(import_row["source"])
+
+        if source == "scrape":
+            from app.integrations.letterboxd_profile import scrape_profile
+
+            username_raw = await redis.get(SCRAPE_KEY.format(import_id=import_id))
+            if username_raw is None:
+                raise RuntimeError("scrape params not found (expired before processing)")
+            username = (
+                username_raw.decode() if isinstance(username_raw, bytes) else str(username_raw)
+            )
+            parsed = await scrape_profile(username)
+        else:
+            raw = await redis.get(ZIP_KEY.format(import_id=import_id))
+            if raw is None:
+                raise RuntimeError("export bytes not found (expired before processing)")
+            parsed = parse_export(raw)
+
         await stage("matching", total=len(parsed.films), matched=0)
 
         # --- matching: crosswalk cache, then TMDB search for misses ---
@@ -57,7 +73,7 @@ async def run_pipeline(import_id: str, redis: Any, tmdb: TMDBClient) -> None:
         await _enrich(list({m.tmdb_id for m in matched.values()}), tmdb)
 
         # --- persist ratings, unmatched, crosswalk ---
-        await asyncio.to_thread(_persist, profile_id, parsed, matched, unmatched)
+        await asyncio.to_thread(_persist, profile_id, parsed, matched, unmatched, source)
 
         # --- profiling: compute the taste profile (Phase 1) ---
         await stage("profiling")
@@ -130,12 +146,12 @@ def _set_status(import_id: uuid.UUID, status: str, counts: dict[str, int] | None
         profile_repo.update_import(conn, import_id, status=status, stage_counts=counts)
 
 
-def _profile_id_for(import_id: uuid.UUID) -> uuid.UUID:
+def _get_import_row(import_id: uuid.UUID) -> dict[str, Any]:
     with get_engine().connect() as conn:
         row = profile_repo.get_import(conn, import_id)
     if row is None:
         raise RuntimeError("import row missing")
-    return cast(uuid.UUID, row["profile_id"])
+    return dict(row)
 
 
 def _lookup_crosswalk(keys: list[tuple[str, int]]) -> dict[tuple[str, int], tuple[int, float]]:
@@ -160,6 +176,7 @@ def _persist(
     parsed: ParsedExport,
     matched: dict[str, MatchResult],
     unmatched: list[FilmRecord],
+    source: str,
 ) -> None:
     # Multiple Letterboxd entries (distinct URIs) can resolve to the same TMDB id
     # (alternate cuts, duplicate LB pages). Collapse by film_id so a single upsert
@@ -179,7 +196,7 @@ def _persist(
                 "watched_date": f.watched_date,
                 "review_text": f.review_text,
                 "in_watchlist": f.in_watchlist,
-                "source": "export",
+                "source": source,
             }
         else:
             _merge_rating(existing, f)
