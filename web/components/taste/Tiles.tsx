@@ -167,7 +167,14 @@ function Ring({
     <div className="flex w-full items-center gap-4">
       <div className="relative h-20 w-20 shrink-0">
         <svg aria-hidden="true" viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="9" />
+          <circle
+            cx="50"
+            cy="50"
+            r={r}
+            fill="none"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth="9"
+          />
           <motion.circle
             cx="50"
             cy="50"

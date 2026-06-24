@@ -75,9 +75,7 @@ export default function LandingPage() {
               : busy
                 ? "rgba(255,255,255,0.06)"
                 : "rgba(255,255,255,0.12)",
-            background: dragging
-              ? "rgba(255,255,255,0.05)"
-              : "transparent",
+            background: dragging ? "rgba(255,255,255,0.05)" : "transparent",
             opacity: busy ? 0.5 : 1,
           }}
         >
@@ -85,9 +83,7 @@ export default function LandingPage() {
             {busy ? "Loading…" : dragging ? "Drop it" : "Drop your export"}
           </span>
           <span className="mt-1.5 block text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>
-            {busy
-              ? "Starting import…"
-              : "Letterboxd → Settings → Data → Export · .zip"}
+            {busy ? "Starting import…" : "Letterboxd → Settings → Data → Export · .zip"}
           </span>
         </button>
 

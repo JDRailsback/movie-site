@@ -67,8 +67,7 @@ export function RecCard({
             <div
               className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               style={{
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 45%)",
+                background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 45%)",
               }}
             />
 
@@ -91,9 +90,7 @@ export function RecCard({
 
           {/* Meta below poster */}
           <div className="mt-2 px-0.5">
-            <p className="truncate text-[12px] font-medium text-white leading-tight">
-              {f.title}
-            </p>
+            <p className="truncate text-[12px] font-medium text-white leading-tight">{f.title}</p>
             <p className="mt-0.5 text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
               {f.year ?? ""}
               {f.lbRating != null ? (
