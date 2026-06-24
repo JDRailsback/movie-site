@@ -277,6 +277,30 @@ def load_film_dataset(conn: Connection, profile_id: uuid.UUID) -> list[dict[str,
     return list(out.values())
 
 
+def get_watchlist(conn: Connection, profile_id: uuid.UUID) -> list[dict[str, Any]]:
+    ufr, film = t.user_film_rating, t.film
+    rows = (
+        conn.execute(
+            select(
+                film.c.tmdb_id,
+                film.c.title,
+                film.c.year,
+                film.c.poster_path,
+                film.c.runtime_min,
+                film.c.weighted_rating,
+                film.c.lb_rating,
+                film.c.lb_watch_count,
+            )
+            .select_from(ufr.join(film, film.c.tmdb_id == ufr.c.film_id))
+            .where(ufr.c.profile_id == profile_id, ufr.c.in_watchlist.is_(True))
+            .order_by(film.c.title)
+        )
+        .mappings()
+        .all()
+    )
+    return [dict(r) for r in rows]
+
+
 def recently_watched(conn: Connection, profile_id: uuid.UUID, limit: int) -> list[dict[str, Any]]:
     ufr, film = t.user_film_rating, t.film
     rows = (

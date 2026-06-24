@@ -118,6 +118,30 @@ async def get_films(profile_id: str) -> list[FilmDatum]:
     return [FilmDatum(**r) for r in rows]
 
 
+@router.get("/{profile_id}/watchlist")
+async def get_watchlist(profile_id: str) -> list[FilmCard]:
+    pid = await _resolve(profile_id)
+
+    def _read() -> list[dict[str, Any]]:
+        with get_engine().connect() as conn:
+            return taste_repo.get_watchlist(conn, pid)
+
+    rows = await asyncio.to_thread(_read)
+    return [
+        FilmCard(
+            tmdb_id=r["tmdb_id"],
+            title=r["title"],
+            year=r["year"],
+            poster_path=r["poster_path"],
+            runtime_min=r["runtime_min"],
+            weighted_rating=r["weighted_rating"],
+            lb_rating=r["lb_rating"],
+            lb_watch_count=r["lb_watch_count"],
+        )
+        for r in rows
+    ]
+
+
 @router.get("/{profile_id}/recently-watched")
 async def recently_watched(profile_id: str, limit: int = 24) -> list[FilmCard]:
     pid = await _resolve(profile_id)

@@ -1,176 +1,140 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useMemo } from "react";
 
-interface Dot {
-  x: number;
-  y: number;
-  phase: number;
-  dur: number;
-}
-
-const FONT_FAMILY = "Broadway, Anton, serif";
+const VW = 1400;
+const VH = 280;
+const FRAME = 52;
+const BR = 9;    // bulb radius
+const BS = 30;   // bulb spacing
 
 function seed(n: number): number {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 }
 
-// Broadway 3D Filled has circular holes cut into the letter body.
-// We render white-on-black, then find dark pixels that are *surrounded*
-// by bright letter-body pixels — those are the holes where lights go.
-function computeHoles(
-  fs: number,
-  w: number,
-  h: number,
-): { dots: Dot[]; dotR: number } {
-  const grid = Math.max(8, Math.round(fs * 0.07));
-  const check = Math.max(grid + 2, Math.round(fs * 0.085));
-  const dotR = Math.max(3, Math.round(fs * 0.03));
+interface Bulb { x: number; y: number; k: number }
 
-  const cv = document.createElement("canvas");
-  cv.width = w;
-  cv.height = h;
-  const ctx = cv.getContext("2d");
-  if (!ctx) return { dots: [], dotR };
-
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, w, h);
-  ctx.font = `${fs}px ${FONT_FAMILY}`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#fff";
-  ctx.fillText("WATCH NEXT", w / 2, h / 2);
-
-  const px = ctx.getImageData(0, 0, w, h).data;
-
-  const dirs: [number, number][] = [
-    [-check, 0],
-    [check, 0],
-    [0, -check],
-    [0, check],
-    [-check, -check],
-    [check, check],
-    [-check, check],
-    [check, -check],
-  ];
-
-  const dots: Dot[] = [];
-
-  for (let y = check; y < h - check; y += grid) {
-    for (let x = check; x < w - check; x += grid) {
-      // This pixel must be dark — inside a hole (background showing through)
-      if (px[(y * w + x) * 4] > 80) continue;
-
-      // Count how many neighbours in 8 directions are part of the bright letter body
-      let bright = 0;
-      for (const [dx, dy] of dirs) {
-        const nx = x + dx;
-        const ny = y + dy;
-        if (px[(ny * w + nx) * 4] > 150) bright++;
-      }
-
-      // If enclosed on enough sides, it's inside a letter hole
-      if (bright >= 4) {
-        const s = (x / grid) * 1000 + y / grid;
-        dots.push({
-          x,
-          y,
-          phase: seed(s) * 2.5,
-          dur: 0.5 + seed(s + 99) * 1.2,
-        });
-      }
-    }
+function row(y: number, xStart: number, xEnd: number, kStart: number): Bulb[] {
+  const out: Bulb[] = [];
+  for (let x = xStart; x <= xEnd; x += BS) {
+    out.push({ x, y, k: kStart + out.length });
   }
-
-  return { dots, dotR };
+  return out;
 }
 
-interface BannerState {
-  w: number;
-  h: number;
-  fs: number;
-  dots: Dot[];
-  dotR: number;
+function col(x: number, yStart: number, yEnd: number, kStart: number): Bulb[] {
+  const out: Bulb[] = [];
+  for (let y = yStart; y <= yEnd; y += BS) {
+    out.push({ x, y, k: kStart + out.length });
+  }
+  return out;
 }
 
 export function MarqueeBanner() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [state, setState] = useState<BannerState | null>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const w = Math.floor(ref.current.getBoundingClientRect().width);
-
-    // Explicitly wait for Broadway before measuring — font-display:swap
-    // can defer actual loading past fonts.ready in some browsers.
-    document.fonts.load(`100px Broadway`).finally(() => {
-      const cv0 = document.createElement("canvas");
-      const c0 = cv0.getContext("2d");
-      if (!c0) return;
-      c0.font = `100px ${FONT_FAMILY}`;
-      const tw = c0.measureText("WATCH NEXT").width;
-      // Fill 92% of container, no upper cap — user wants it big
-      const fs = Math.floor(((w * 0.92) / tw) * 100);
-      const h = Math.ceil(fs * 1.45);
-      const { dots, dotR } = computeHoles(fs, w, h);
-      setState({ w, h, fs, dots, dotR });
-    });
+  const bulbs = useMemo<Bulb[]>(() => {
+    const xMin = 16, xMax = VW - 16;
+    const yMin = 16, yMax = VH - 16;
+    const t1 = row(16, xMin, xMax, 0);
+    const t2 = row(36, xMin + BS / 2, xMax - BS / 2, t1.length);
+    const b1 = row(VH - 16, xMin, xMax, t1.length + t2.length);
+    const b2 = row(VH - 36, xMin + BS / 2, xMax - BS / 2, t1.length + t2.length + b1.length);
+    const l = col(26, 56, VH - 56, t1.length + t2.length + b1.length + b2.length);
+    const r = col(VW - 26, 56, VH - 56, t1.length + t2.length + b1.length + b2.length + l.length);
+    return [...t1, ...t2, ...b1, ...b2, ...l, ...r];
   }, []);
+
+  const ix = FRAME, iy = FRAME;
+  const iw = VW - FRAME * 2, ih = VH - FRAME * 2;
 
   return (
     <>
-      <style>{`@keyframes db{from{opacity:1}to{opacity:.06}}`}</style>
+      <style>{`
+        @keyframes bl { from { opacity: 1; } to { opacity: 0.08; } }
+      `}</style>
       <div
-        ref={ref}
         style={{
-          width: "100%",
-          background: "#1c1108",
-          overflow: "hidden",
-          minHeight: 160,
+          padding: "32px 0",
+          filter: "drop-shadow(0 0 48px rgba(180,70,0,0.45)) drop-shadow(0 0 96px rgba(120,40,0,0.25))",
         }}
       >
-        {state && (
-          <svg width={state.w} height={state.h} style={{ display: "block" }}>
-            {/* Depth shadow */}
-            <text
-              x={state.w / 2 + 6}
-              y={state.h / 2 + 6}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontFamily={FONT_FAMILY}
-              fontSize={state.fs}
-              fill="#3a2005"
-            >
-              WATCH NEXT
-            </text>
-            {/* Letter body — warm gold */}
-            <text
-              x={state.w / 2}
-              y={state.h / 2}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontFamily={FONT_FAMILY}
-              fontSize={state.fs}
-              fill="#c9a84c"
-            >
-              WATCH NEXT
-            </text>
-            {/* Twinkling lights at hole positions */}
-            {state.dots.map((d, i) => (
+        <svg
+          viewBox={`0 0 ${VW} ${VH}`}
+          width="100%"
+          style={{ display: "block" }}
+          aria-label="Watch Next marquee sign"
+        >
+          <defs>
+            {/* Interior grid pattern */}
+            <pattern id="mgrid" width="48" height="48" patternUnits="userSpaceOnUse">
+              <path d="M48 0H0V48" fill="none" stroke="rgba(140,100,40,0.12)" strokeWidth="0.8" />
+            </pattern>
+            {/* Bulb glow filter */}
+            <filter id="bglow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Frame — three layers for depth */}
+          <rect x={0} y={0} width={VW} height={VH} rx={5} fill="#2e0800" />
+          <rect x={4} y={4} width={VW-8} height={VH-8} rx={4} fill="#7a1a00" />
+          <rect x={8} y={8} width={VW-16} height={VH-16} rx={3} fill="#a82800" />
+          <rect x={12} y={12} width={VW-24} height={VH-24} rx={2} fill="#c43800" />
+
+          {/* Inner frame edge (bright highlight) */}
+          <rect x={ix-4} y={iy-4} width={iw+8} height={ih+8} rx={2} fill="#d84000" />
+
+          {/* Cream interior */}
+          <rect x={ix} y={iy} width={iw} height={ih} fill="#f0e6c0" />
+          <rect x={ix} y={iy} width={iw} height={ih} fill="url(#mgrid)" />
+
+          {/* Text */}
+          <text
+            x={VW / 2}
+            y={VH / 2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            style={{ fontFamily: "var(--font-display), serif", fontSize: 92 }}
+            fill="#1a0800"
+            letterSpacing={6}
+          >
+            WATCH NEXT
+          </text>
+
+          {/* Bulb sockets */}
+          {bulbs.map((b) => (
+            <circle key={`s${b.k}`} cx={b.x} cy={b.y} r={BR + 3} fill="#1e0600" />
+          ))}
+
+          {/* Animated bulbs */}
+          {bulbs.map((b) => {
+            const delay = seed(b.k * 7.3) * 3;
+            const dur = 0.6 + seed(b.k * 3.1 + 99) * 1.1;
+            return (
               <circle
-                key={i}
-                cx={d.x}
-                cy={d.y}
-                r={state.dotR}
-                fill="#fff5c8"
+                key={`b${b.k}`}
+                cx={b.x}
+                cy={b.y}
+                r={BR}
+                fill="#ffe8a0"
+                filter="url(#bglow)"
                 style={{
-                  animation: `db ${d.dur}s ${d.phase}s ease-in-out infinite alternate`,
+                  animationName: "bl",
+                  animationDuration: `${dur}s`,
+                  animationDelay: `${delay}s`,
+                  animationTimingFunction: "ease-in-out",
+                  animationIterationCount: "infinite",
+                  animationDirection: "alternate",
                 }}
+                suppressHydrationWarning
               />
-            ))}
-          </svg>
-        )}
+            );
+          })}
+        </svg>
       </div>
     </>
   );

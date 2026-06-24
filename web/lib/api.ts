@@ -192,6 +192,10 @@ export async function getRecs(profileId: string, surface: string): Promise<Recom
   );
 }
 
+export async function getWatchlist(profileId: string): Promise<FilmCard[]> {
+  return unwrap<FilmCard[]>(await fetch(`${API_BASE}/profiles/${profileId}/watchlist`));
+}
+
 export async function getDismissed(profileId: string): Promise<FilmCard[]> {
   return unwrap<FilmCard[]>(await fetch(`${API_BASE}/profiles/${profileId}/dismissed`));
 }

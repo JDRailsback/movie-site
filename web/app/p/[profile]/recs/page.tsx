@@ -53,10 +53,10 @@ export default function RecsPage() {
           return (
             <section key={s.key} className="mx-auto max-w-7xl px-8 mt-14">
               <div className="border-t pt-8 mb-7" style={{ borderColor: EDGE }}>
-                <h2 className="font-display text-[2.8rem] text-white leading-tight tracking-tight">
+                <h2 className="font-display text-[2.8rem] leading-tight tracking-tight" style={{ color: "rgba(240,210,150,0.95)" }}>
                   {s.title}
                 </h2>
-                <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "rgba(240,210,150,0.5)" }}>
+                <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "rgba(196,154,60,0.6)" }}>
                   {s.blurb}
                 </p>
               </div>
@@ -73,10 +73,10 @@ export default function RecsPage() {
                   className="rounded-sm px-6 py-8 text-center"
                   style={{ background: "rgba(196,154,60,0.04)", border: `1px solid ${EDGE}` }}
                 >
-                  <p className="text-[13px]" style={{ color: "rgba(240,210,150,0.45)" }}>
+                  <p className="text-[13px]" style={{ color: "rgba(196,154,60,0.6)" }}>
                     Nothing here yet.
                   </p>
-                  <p className="mt-1 text-[12px]" style={{ color: "rgba(240,210,150,0.3)" }}>
+                  <p className="mt-1 text-[12px]" style={{ color: "rgba(196,154,60,0.6)" }}>
                     Import more of your Letterboxd history to populate this section.{" "}
                     <Link
                       href="/"

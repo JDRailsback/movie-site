@@ -44,7 +44,7 @@ export function RecCard({
           {/* Poster */}
           <div
             className="relative w-full overflow-hidden rounded-sm"
-            style={{ aspectRatio: "2/3", background: "rgba(255,255,255,0.05)" }}
+            style={{ aspectRatio: "2/3", background: "rgba(196,154,60,0.08)" }}
           >
             {url ? (
               <img
@@ -56,7 +56,7 @@ export function RecCard({
               <div className="flex h-full items-end p-2">
                 <span
                   className="line-clamp-3 text-[9px] leading-tight"
-                  style={{ color: "rgba(255,255,255,0.3)" }}
+                  style={{ color: "rgba(240,210,150,0.4)" }}
                 >
                   {f.title}
                 </span>
@@ -90,8 +90,8 @@ export function RecCard({
 
           {/* Meta below poster */}
           <div className="mt-2 px-0.5">
-            <p className="truncate text-[12px] font-medium text-white leading-tight">{f.title}</p>
-            <p className="mt-0.5 text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+            <p className="truncate text-[12px] font-medium leading-tight" style={{ color: "rgba(240,210,150,0.95)" }}>{f.title}</p>
+            <p className="mt-0.5 text-[11px]" style={{ color: "rgba(196,154,60,0.6)" }}>
               {f.year ?? ""}
               {f.lbRating != null ? (
                 <span> · ★ {f.lbRating.toFixed(1)}</span>

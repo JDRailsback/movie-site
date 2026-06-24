@@ -4,8 +4,8 @@ import { type FilmDatum, type TasteProfile, getFilms, getTasteProfile, posterUrl
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-const EDGE = "rgba(255,255,255,0.06)";
-const DIM = "rgba(255,255,255,0.25)";
+const EDGE = "rgba(196,154,60,0.2)";
+const DIM = "rgba(196,154,60,0.6)";
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
@@ -13,7 +13,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p
       className="mb-7 text-[10px] uppercase tracking-[0.25em] font-medium"
-      style={{ color: "rgba(255,255,255,0.2)" }}
+      style={{ color: "rgba(196,154,60,0.6)" }}
     >
       {children}
     </p>
@@ -24,15 +24,17 @@ function StatPill({ label, value }: { label: string; value: string | number }) {
   return (
     <div
       className="flex flex-col gap-1 rounded-sm px-5 py-3"
-      style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${EDGE}` }}
+      style={{ background: "rgba(196,154,60,0.06)", border: `1px solid ${EDGE}` }}
     >
       <span
         className="text-[9px] uppercase tracking-[0.2em]"
-        style={{ color: "rgba(255,255,255,0.2)" }}
+        style={{ color: "rgba(196,154,60,0.6)" }}
       >
         {label}
       </span>
-      <span className="text-[15px] font-medium text-white tabular-nums">{value}</span>
+      <span className="text-[15px] font-medium tabular-nums" style={{ color: "rgba(240,210,150,0.9)" }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -124,8 +126,8 @@ export default function TasteMapPage() {
     <main style={{ background: "#1c1108" }} className="min-h-screen pb-32">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-8 pt-14">
-        <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
-          Taste map.
+        <h1 className="font-display text-[5.5rem] leading-none tracking-tight" style={{ color: "rgba(240,210,150,0.95)" }}>
+          Taste Profile
         </h1>
 
         {summary && (
@@ -160,7 +162,7 @@ export default function TasteMapPage() {
               {/* Left: genre list */}
               <div
                 className="no-scrollbar shrink-0 overflow-y-auto"
-                style={{ width: 248, borderRight: `1px solid ${EDGE}`, background: "#0d0d0d" }}
+                style={{ width: 248, borderRight: `1px solid ${EDGE}`, background: "#160d04" }}
               >
                 {genres.map((g) => {
                   const active = g.name === selectedGenre;
@@ -173,37 +175,37 @@ export default function TasteMapPage() {
                       className="flex w-full flex-col gap-2 px-5 py-3.5 text-left transition-colors"
                       style={{
                         borderBottom: `1px solid ${EDGE}`,
-                        borderLeft: `2px solid ${active ? "#fff" : "transparent"}`,
-                        background: active ? "rgba(255,255,255,0.05)" : "transparent",
+                        borderLeft: `2px solid ${active ? "#c9a84c" : "transparent"}`,
+                        background: active ? "rgba(196,154,60,0.1)" : "transparent",
                       }}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span
                           className="text-[13px] font-medium leading-tight"
-                          style={{ color: active ? "#fff" : "rgba(255,255,255,0.45)" }}
+                          style={{ color: active ? "rgba(240,210,150,0.95)" : "rgba(196,154,60,0.6)" }}
                         >
                           {g.name}
                         </span>
                         <span
                           className="shrink-0 text-[11px] tabular-nums"
                           style={{
-                            color: active ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
+                            color: active ? "rgba(240,210,150,0.7)" : "rgba(196,154,60,0.6)",
                           }}
                         >
                           {g.affinity >= 0 ? "+" : ""}
                           {g.affinity.toFixed(2)}
                         </span>
                       </div>
-                      <div className="h-px w-full" style={{ background: "rgba(255,255,255,0.07)" }}>
+                      <div className="h-px w-full" style={{ background: "rgba(196,154,60,0.12)" }}>
                         <div
                           className="h-full transition-[width] duration-300"
                           style={{
                             width: `${barPct}%`,
-                            background: active ? "#fff" : "rgba(255,255,255,0.25)",
+                            background: active ? "#c9a84c" : "rgba(196,154,60,0.35)",
                           }}
                         />
                       </div>
-                      <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.18)" }}>
+                      <span className="text-[10px]" style={{ color: "rgba(196,154,60,0.6)" }}>
                         {g.count} films · ★ {(g.avg_rating / 2).toFixed(1)}
                       </span>
                     </button>
@@ -214,15 +216,15 @@ export default function TasteMapPage() {
               {/* Right: film grid for selected genre */}
               <div
                 className="no-scrollbar flex-1 overflow-y-auto"
-                style={{ background: "#0b0b0b" }}
+                style={{ background: "#130a03" }}
               >
                 {activeGenre ? (
                   <div className="p-6">
                     <div className="mb-6 pb-5" style={{ borderBottom: `1px solid ${EDGE}` }}>
-                      <h3 className="font-display text-3xl text-white leading-none">
+                      <h3 className="font-display text-3xl leading-none" style={{ color: "rgba(240,210,150,0.95)" }}>
                         {activeGenre.name}
                       </h3>
-                      <p className="mt-2 text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+                      <p className="mt-2 text-[12px]" style={{ color: "rgba(196,154,60,0.6)" }}>
                         {activeGenre.count} films &middot; ★&thinsp;
                         {activeGenre.avg_rating.toFixed(1)} avg &middot;{" "}
                         {activeGenre.affinity >= 0 ? "+" : ""}
@@ -246,7 +248,7 @@ export default function TasteMapPage() {
                           >
                             <div
                               className="relative overflow-hidden rounded-sm"
-                              style={{ aspectRatio: "2/3", background: "rgba(255,255,255,0.06)" }}
+                              style={{ aspectRatio: "2/3", background: "rgba(196,154,60,0.1)" }}
                             >
                               {url ? (
                                 <img
@@ -273,7 +275,7 @@ export default function TasteMapPage() {
                                 </span>
                               )}
                             </div>
-                            <p className="truncate text-[10px] font-medium text-white leading-tight">
+                            <p className="truncate text-[10px] font-medium leading-tight" style={{ color: "rgba(240,210,150,0.95)" }}>
                               {film.title}
                             </p>
                           </a>
@@ -306,25 +308,31 @@ export default function TasteMapPage() {
                 return (
                   <div
                     key={d.name}
-                    className="flex items-center gap-5 px-6 py-4 transition-colors hover:bg-white/[0.02]"
+                    className="flex items-center gap-5 px-6 py-4 transition-colors"
                     style={{
                       borderBottom: i < directors.length - 1 ? `1px solid ${EDGE}` : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "rgba(196,154,60,0.04)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "transparent";
                     }}
                   >
                     {/* Rank */}
                     <span
                       className="w-6 shrink-0 text-right text-[11px] tabular-nums"
-                      style={{ color: "rgba(255,255,255,0.18)" }}
+                      style={{ color: "rgba(196,154,60,0.6)" }}
                     >
                       {i + 1}
                     </span>
 
                     {/* Name + stats */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-semibold text-white leading-tight truncate">
+                      <p className="text-[15px] font-semibold leading-tight truncate" style={{ color: "rgba(240,210,150,0.9)" }}>
                         {d.name}
                       </p>
-                      <p className="mt-0.5 text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      <p className="mt-0.5 text-[11px]" style={{ color: "rgba(196,154,60,0.6)" }}>
                         {d.count} {d.count === 1 ? "film" : "films"} &middot; ★&thinsp;
                         {(d.avg_rating / 2).toFixed(1)} avg &middot; {d.affinity >= 0 ? "+" : ""}
                         {d.affinity.toFixed(2)}
@@ -349,7 +357,7 @@ export default function TasteMapPage() {
                               style={{
                                 width: 32,
                                 height: 48,
-                                background: "rgba(255,255,255,0.06)",
+                                background: "rgba(196,154,60,0.1)",
                               }}
                             >
                               {url && (
@@ -381,47 +389,46 @@ export default function TasteMapPage() {
             <div className="space-y-2">
               {eras.map((era) => {
                 const barPct = (era.count / maxEraCount) * 100;
-                // Map affinity (-1..+1) to bar opacity (0.12..1.0)
                 const opacity = Math.max(
-                  0.12,
-                  Math.min(1.0, 0.12 + ((era.affinity + 1) / 2) * 0.88),
+                  0.15,
+                  Math.min(1.0, 0.15 + ((era.affinity + 1) / 2) * 0.85),
                 );
                 return (
                   <div key={era.decade} className="flex items-center gap-4">
                     <span
                       className="w-12 shrink-0 text-right text-[12px] font-medium tabular-nums"
-                      style={{ color: "rgba(255,255,255,0.3)" }}
+                      style={{ color: "rgba(196,154,60,0.6)" }}
                     >
                       {era.decade}s
                     </span>
 
                     <div
                       className="relative flex-1 h-7 overflow-hidden rounded-sm"
-                      style={{ background: "rgba(255,255,255,0.03)" }}
+                      style={{ background: "rgba(196,154,60,0.06)" }}
                     >
                       <div
                         className="absolute left-0 top-0 h-full rounded-sm transition-[width] duration-500"
                         style={{
                           width: `${barPct}%`,
-                          background: `rgba(255,255,255,${opacity})`,
+                          background: `rgba(196,154,60,${opacity})`,
                           minWidth: 4,
                         }}
                       />
                     </div>
 
                     <div className="flex w-40 shrink-0 items-center justify-between gap-3 text-[11px] tabular-nums">
-                      <span style={{ color: "rgba(255,255,255,0.22)" }}>{era.count} films</span>
-                      <span style={{ color: "rgba(255,255,255,0.25)" }}>
+                      <span style={{ color: "rgba(196,154,60,0.6)" }}>{era.count} films</span>
+                      <span style={{ color: "rgba(196,154,60,0.6)" }}>
                         ★&thinsp;{(era.avg_rating / 2).toFixed(1)}
                       </span>
                       <span
                         style={{
                           color:
                             era.affinity >= 0.15
-                              ? "rgba(255,255,255,0.6)"
+                              ? "rgba(240,210,150,0.75)"
                               : era.affinity <= -0.15
-                                ? "rgba(255,255,255,0.18)"
-                                : "rgba(255,255,255,0.35)",
+                                ? "rgba(196,154,60,0.6)"
+                                : "rgba(196,154,60,0.6)",
                         }}
                       >
                         {era.affinity >= 0 ? "+" : ""}
@@ -445,13 +452,13 @@ function Skeleton() {
   return (
     <main style={{ background: "#1c1108" }} className="min-h-screen pb-24">
       <div className="mx-auto max-w-7xl px-8 pt-14 space-y-8">
-        <div className="h-20 w-48 rounded" style={{ background: "rgba(255,255,255,0.04)" }} />
+        <div className="h-20 w-64 rounded" style={{ background: "rgba(196,154,60,0.06)" }} />
         <div className="flex gap-3">
           {[80, 72, 64, 96, 112].map((w) => (
             <div
               key={w}
               className="h-16 rounded-sm"
-              style={{ width: w, background: "rgba(255,255,255,0.03)" }}
+              style={{ width: w, background: "rgba(196,154,60,0.04)" }}
             />
           ))}
         </div>
@@ -459,11 +466,11 @@ function Skeleton() {
           className="rounded-sm"
           style={{
             height: "min(calc(100vh - 300px), 700px)",
-            background: "rgba(255,255,255,0.03)",
+            background: "rgba(196,154,60,0.04)",
           }}
         />
-        <div className="h-64 rounded-sm" style={{ background: "rgba(255,255,255,0.03)" }} />
-        <div className="h-40 rounded-sm" style={{ background: "rgba(255,255,255,0.03)" }} />
+        <div className="h-64 rounded-sm" style={{ background: "rgba(196,154,60,0.04)" }} />
+        <div className="h-40 rounded-sm" style={{ background: "rgba(196,154,60,0.04)" }} />
       </div>
     </main>
   );

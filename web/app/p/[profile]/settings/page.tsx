@@ -16,7 +16,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const EDGE = "rgba(196,154,60,0.2)";
-const DIM = "rgba(240,210,150,0.55)";
+const DIM = "rgba(196,154,60,0.6)";
 const FAINT = "rgba(196,154,60,0.12)";
 
 function SectionDivider({ children }: { children: React.ReactNode }) {
@@ -24,7 +24,7 @@ function SectionDivider({ children }: { children: React.ReactNode }) {
     <div className="border-t pt-8 mb-8" style={{ borderColor: EDGE }}>
       <p
         className="text-[10px] uppercase tracking-[0.22em] font-medium"
-        style={{ color: "rgba(196,154,60,0.65)" }}
+        style={{ color: "rgba(196,154,60,0.6)" }}
       >
         {children}
       </p>
@@ -83,10 +83,10 @@ function SettingRow({
       style={{ borderBottom: `1px solid ${EDGE}` }}
     >
       <div className="min-w-0">
-        <p className="text-[14px] font-medium text-white">{label}</p>
+        <p className="text-[14px] font-medium" style={{ color: "rgba(240,210,150,0.9)" }}>{label}</p>
         <p
           className="text-[12px] mt-0.5 leading-relaxed"
-          style={{ color: "rgba(255,255,255,0.3)" }}
+          style={{ color: "rgba(196,154,60,0.6)" }}
         >
           {description}
         </p>
@@ -161,8 +161,8 @@ export default function SettingsPage() {
     <main style={{ background: "#1c1108" }} className="min-h-screen pb-32">
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-8 pt-14 pb-4">
-        <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
-          Settings.
+        <h1 className="font-display text-[5.5rem] leading-none tracking-tight" style={{ color: "rgba(240,210,150,0.95)" }}>
+          Settings
         </h1>
       </div>
 
@@ -206,7 +206,7 @@ export default function SettingsPage() {
           <SectionDivider>Dismissed films</SectionDivider>
           <p className="text-[13px] mb-7 -mt-2 leading-relaxed" style={{ color: DIM }}>
             Films you've hidden. Hover a poster and click{" "}
-            <strong style={{ color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>Restore</strong> to
+            <strong style={{ color: "rgba(240,210,150,0.7)", fontWeight: 500 }}>Restore</strong> to
             bring them back to your recommendations.
           </p>
 
@@ -219,19 +219,19 @@ export default function SettingsPage() {
                 <div
                   key={i}
                   className="rounded-sm"
-                  style={{ aspectRatio: "2/3", background: "rgba(255,255,255,0.04)" }}
+                  style={{ aspectRatio: "2/3", background: "rgba(196,154,60,0.06)" }}
                 />
               ))}
             </div>
           ) : dismissed.length === 0 ? (
             <div
               className="rounded-sm px-6 py-8 text-center"
-              style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${EDGE}` }}
+              style={{ background: "rgba(196,154,60,0.04)", border: `1px solid ${EDGE}` }}
             >
               <p className="text-[13px]" style={{ color: DIM }}>
                 Nothing dismissed yet.
               </p>
-              <p className="mt-1 text-[12px]" style={{ color: "rgba(255,255,255,0.15)" }}>
+              <p className="mt-1 text-[12px]" style={{ color: "rgba(196,154,60,0.6)" }}>
                 Press ✕ on any recommendation to hide a film.
               </p>
             </div>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                         </span>
                       </button>
                     </div>
-                    <p className="truncate text-[11px] font-medium text-white leading-tight">
+                    <p className="truncate text-[11px] font-medium leading-tight" style={{ color: "rgba(240,210,150,0.95)" }}>
                       {film.title}
                     </p>
                     {film.year && (
@@ -303,19 +303,19 @@ export default function SettingsPage() {
             style={{ borderBottom: `1px solid ${EDGE}` }}
           >
             <div>
-              <p className="text-[22px] font-light text-white tabular-nums">
+              <p className="text-[22px] font-light tabular-nums" style={{ color: "rgba(240,210,150,0.9)" }}>
                 {summary ? summary.filmCount.toLocaleString() : "—"}
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(196,154,60,0.6)" }}>
                 films imported
               </p>
             </div>
             <div className="self-stretch w-px" style={{ background: EDGE }} />
             <div>
-              <p className="text-[22px] font-light text-white">
+              <p className="text-[22px] font-light" style={{ color: "rgba(240,210,150,0.9)" }}>
                 {summary ? formatDate(summary.lastImportAt) : "—"}
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(196,154,60,0.6)" }}>
                 last sync
               </p>
             </div>
@@ -349,8 +349,8 @@ export default function SettingsPage() {
                 className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-opacity hover:opacity-80"
                 style={{
                   background: "transparent",
-                  color: "rgba(255,255,255,0.55)",
-                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "rgba(196,154,60,0.6)",
+                  border: "1px solid rgba(196,154,60,0.25)",
                 }}
               >
                 Upload ZIP
