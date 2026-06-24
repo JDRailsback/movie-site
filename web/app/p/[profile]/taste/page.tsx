@@ -124,7 +124,7 @@ export default function TasteMapPage() {
     <main style={{ background: "#0a0a0a" }} className="min-h-screen pb-32">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-8 pt-14">
-        <h1 className="font-display text-[5.5rem] italic font-light text-white leading-none tracking-tight">
+        <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
           Taste map.
         </h1>
 
@@ -219,7 +219,7 @@ export default function TasteMapPage() {
                 {activeGenre ? (
                   <div className="p-6">
                     <div className="mb-6 pb-5" style={{ borderBottom: `1px solid ${EDGE}` }}>
-                      <h3 className="font-display text-3xl italic font-light text-white leading-none">
+                      <h3 className="font-display text-3xl text-white leading-none">
                         {activeGenre.name}
                       </h3>
                       <p className="mt-2 text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>

@@ -38,7 +38,7 @@ function ImportProgress() {
       style={{ background: "#0a0a0a" }}
     >
       <div className="space-y-3">
-        <h1 className="font-display text-[3.5rem] italic font-light text-white leading-none">
+        <h1 className="font-display text-[3.5rem] text-white leading-none">
           {done ? "All set." : failed ? "Something went wrong." : "Building your recs…"}
         </h1>
         <p style={{ color: "rgba(255,255,255,0.3)" }} className="text-sm">

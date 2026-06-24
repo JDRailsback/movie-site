@@ -38,9 +38,7 @@ export default function LandingPage() {
       <div className="w-full max-w-sm space-y-10">
         {/* Header */}
         <div className="space-y-2 text-center">
-          <h1 className="font-display text-[5rem] italic font-light text-white leading-none tracking-tight">
-            Recs.
-          </h1>
+          <h1 className="font-display text-[5rem] text-white leading-none tracking-tight">Recs.</h1>
           <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.32)" }}>
             Film recommendations drawn from your Letterboxd taste.
           </p>
@@ -79,7 +77,7 @@ export default function LandingPage() {
             opacity: busy ? 0.5 : 1,
           }}
         >
-          <span className="block font-display text-2xl italic font-light text-white">
+          <span className="block font-display text-2xl text-white">
             {busy ? "Loading…" : dragging ? "Drop it" : "Drop your export"}
           </span>
           <span className="mt-1.5 block text-[12px]" style={{ color: "rgba(255,255,255,0.28)" }}>

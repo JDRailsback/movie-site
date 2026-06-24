@@ -63,7 +63,7 @@ export default function RecsPage() {
     <div className="min-h-screen pb-32">
       {/* Hero */}
       <div className="mx-auto max-w-7xl px-8 pt-14 pb-4">
-        <h1 className="font-display text-[5.5rem] italic font-light text-white leading-none tracking-tight">
+        <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
           {name ? (
             <>
               Watch next, <span style={{ color: "rgba(255,255,255,0.42)" }}>{name}.</span>
@@ -88,9 +88,7 @@ export default function RecsPage() {
                 >
                   {s.eyebrow}
                 </p>
-                <h2 className="font-display text-[2.6rem] italic font-light text-white leading-tight">
-                  {s.title}
-                </h2>
+                <h2 className="font-display text-[2.6rem] text-white leading-tight">{s.title}</h2>
                 <p
                   className="mt-2 text-[13px] leading-relaxed"
                   style={{ color: "rgba(255,255,255,0.28)" }}

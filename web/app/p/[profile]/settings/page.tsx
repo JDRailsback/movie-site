@@ -4,6 +4,7 @@ import {
   type FilmCard,
   type ProfileSummary,
   getDismissed,
+  getImportStatus,
   getProfileSummary,
   posterUrl,
   refreshProfile,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/api";
 import { type Settings, useSettings } from "@/lib/settings";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const EDGE = "rgba(255,255,255,0.06)";
@@ -106,12 +107,11 @@ function formatDate(iso: string | null | undefined): string {
 
 export default function SettingsPage() {
   const { profile } = useParams<{ profile: string }>();
-  const router = useRouter();
   const [settings, updateSettings] = useSettings();
   const [dismissed, setDismissed] = useState<FilmCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
-  const [syncing, setSyncing] = useState(false);
+  const [syncLabel, setSyncLabel] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -129,18 +129,39 @@ export default function SettingsPage() {
     setDismissed((prev) => prev.filter((f) => f.tmdbId !== tmdbId));
   }
 
-  function sync() {
-    setSyncing(true);
-    refreshProfile(profile)
-      .then(({ importId, profileId }) => router.push(`/import/${importId}?profile=${profileId}`))
-      .catch(() => setSyncing(false));
+  async function sync() {
+    setSyncLabel("Starting…");
+    try {
+      const { importId } = await refreshProfile(profile);
+      const stages: Record<string, string> = {
+        fetching: "Fetching films…",
+        matching: "Matching films…",
+        enriching: "Enriching…",
+        profiling: "Profiling…",
+      };
+      for (let i = 0; i < 180; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const st = await getImportStatus(importId);
+        if (st.status === "ready") {
+          const updated = await getProfileSummary(profile);
+          setSummary(updated);
+          setSyncLabel(null);
+          return;
+        }
+        if (st.status === "failed") throw new Error(st.error ?? "Sync failed");
+        setSyncLabel(stages[st.status] ?? "Syncing…");
+      }
+      throw new Error("Sync timed out");
+    } catch {
+      setSyncLabel(null);
+    }
   }
 
   return (
     <main style={{ background: "#0a0a0a" }} className="min-h-screen pb-32">
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-8 pt-14 pb-4">
-        <h1 className="font-display text-[5.5rem] italic font-light text-white leading-none tracking-tight">
+        <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
           Settings.
         </h1>
       </div>
@@ -308,15 +329,15 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={sync}
-                disabled={syncing}
+                disabled={syncLabel !== null}
                 className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-opacity"
                 style={{
                   background: "#fff",
                   color: "#0a0a0a",
-                  opacity: syncing ? 0.4 : 1,
+                  opacity: syncLabel !== null ? 0.4 : 1,
                 }}
               >
-                {syncing ? "Starting…" : "Sync now"}
+                {syncLabel ?? "Sync now"}
               </button>
             </SettingRow>
             <SettingRow

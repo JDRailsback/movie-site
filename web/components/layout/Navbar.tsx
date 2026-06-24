@@ -28,7 +28,7 @@ export function Navbar({ profileId }: { profileId: string }) {
       <div>
         <Link
           href="/"
-          className="font-display italic text-lg font-light transition-colors"
+          className="font-display text-lg transition-colors"
           style={{ color: "rgba(255,255,255,0.35)" }}
         >
           Recs
