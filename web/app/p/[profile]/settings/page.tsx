@@ -15,16 +15,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const EDGE = "rgba(255,255,255,0.06)";
-const DIM = "rgba(255,255,255,0.25)";
-const FAINT = "rgba(255,255,255,0.12)";
+const EDGE = "rgba(196,154,60,0.2)";
+const DIM = "rgba(240,210,150,0.55)";
+const FAINT = "rgba(196,154,60,0.12)";
 
 function SectionDivider({ children }: { children: React.ReactNode }) {
   return (
     <div className="border-t pt-8 mb-8" style={{ borderColor: EDGE }}>
       <p
         className="text-[10px] uppercase tracking-[0.22em] font-medium"
-        style={{ color: "rgba(255,255,255,0.22)" }}
+        style={{ color: "rgba(196,154,60,0.65)" }}
       >
         {children}
       </p>
@@ -44,7 +44,7 @@ function SegmentedControl<T extends string>({
   return (
     <div
       className="flex items-center rounded-full p-0.5"
-      style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${EDGE}` }}
+      style={{ background: "rgba(196,154,60,0.06)", border: `1px solid ${EDGE}` }}
     >
       {options.map((opt) => {
         const active = opt.value === value;
@@ -55,8 +55,8 @@ function SegmentedControl<T extends string>({
             onClick={() => onChange(opt.value)}
             className="rounded-full px-4 py-1.5 text-[13px] transition-all duration-150"
             style={{
-              background: active ? "#fff" : "transparent",
-              color: active ? "#0a0a0a" : DIM,
+              background: active ? "#c9a84c" : "transparent",
+              color: active ? "#1c1108" : DIM,
               fontWeight: active ? 500 : 400,
             }}
           >
@@ -158,7 +158,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <main style={{ background: "#0a0a0a" }} className="min-h-screen pb-32">
+    <main style={{ background: "#1c1108" }} className="min-h-screen pb-32">
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-8 pt-14 pb-4">
         <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
@@ -332,8 +332,8 @@ export default function SettingsPage() {
                 disabled={syncLabel !== null}
                 className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-opacity"
                 style={{
-                  background: "#fff",
-                  color: "#0a0a0a",
+                  background: "#c9a84c",
+                  color: "#1c1108",
                   opacity: syncLabel !== null ? 0.4 : 1,
                 }}
               >

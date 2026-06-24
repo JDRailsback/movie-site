@@ -53,7 +53,7 @@ export function RecRow({
       {canLeft && (
         <div
           className="pointer-events-none absolute left-0 top-0 z-10 flex h-full w-14 items-center justify-start"
-          style={{ background: "linear-gradient(to right, #0a0a0a 30%, transparent)" }}
+          style={{ background: "linear-gradient(to right, #1c1108 30%, transparent)" }}
         >
           <button
             type="button"
@@ -88,7 +88,7 @@ export function RecRow({
       {canRight && (
         <div
           className="pointer-events-none absolute right-0 top-0 z-10 flex h-full w-14 items-center justify-end"
-          style={{ background: "linear-gradient(to left, #0a0a0a 30%, transparent)" }}
+          style={{ background: "linear-gradient(to left, #1c1108 30%, transparent)" }}
         >
           <button
             type="button"

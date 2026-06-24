@@ -18,10 +18,10 @@ export function Navbar({ profileId }: { profileId: string }) {
       style={{
         gridTemplateColumns: "1fr auto 1fr",
         height: 56,
-        background: "rgba(10,10,10,0.88)",
+        background: "rgba(28,17,8,0.92)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        borderBottom: "1px solid rgba(196,154,60,0.15)",
       }}
     >
       {/* Logo — left */}
@@ -29,7 +29,7 @@ export function Navbar({ profileId }: { profileId: string }) {
         <Link
           href="/"
           className="font-display text-lg transition-colors"
-          style={{ color: "rgba(255,255,255,0.35)" }}
+          style={{ color: "rgba(240,210,150,0.4)" }}
         >
           Recs
         </Link>
@@ -46,8 +46,8 @@ export function Navbar({ profileId }: { profileId: string }) {
               href={target}
               className="rounded-full px-4 py-1.5 text-sm transition-all duration-150"
               style={{
-                color: active ? "#fff" : "rgba(255,255,255,0.35)",
-                background: active ? "rgba(255,255,255,0.09)" : "transparent",
+                color: active ? "#e8c870" : "rgba(240,210,150,0.4)",
+                background: active ? "rgba(196,154,60,0.14)" : "transparent",
                 fontWeight: active ? 500 : 400,
               }}
             >
@@ -63,8 +63,8 @@ export function Navbar({ profileId }: { profileId: string }) {
           href="/"
           className="rounded-full px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-85"
           style={{
-            background: "#fff",
-            color: "#0a0a0a",
+            background: "#c9a84c",
+            color: "#1c1108",
             letterSpacing: "-0.01em",
           }}
         >

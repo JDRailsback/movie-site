@@ -121,7 +121,7 @@ export default function TasteMapPage() {
   const maxEraCount = Math.max(...eras.map((e) => e.count), 1);
 
   return (
-    <main style={{ background: "#0a0a0a" }} className="min-h-screen pb-32">
+    <main style={{ background: "#1c1108" }} className="min-h-screen pb-32">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-8 pt-14">
         <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
@@ -443,7 +443,7 @@ export default function TasteMapPage() {
 
 function Skeleton() {
   return (
-    <main style={{ background: "#0a0a0a" }} className="min-h-screen pb-24">
+    <main style={{ background: "#1c1108" }} className="min-h-screen pb-24">
       <div className="mx-auto max-w-7xl px-8 pt-14 space-y-8">
         <div className="h-20 w-48 rounded" style={{ background: "rgba(255,255,255,0.04)" }} />
         <div className="flex gap-3">

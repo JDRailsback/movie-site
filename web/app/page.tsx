@@ -33,7 +33,7 @@ export default function LandingPage() {
   return (
     <main
       className="flex min-h-screen flex-col items-center justify-center px-6 py-16"
-      style={{ background: "#0a0a0a" }}
+      style={{ background: "#291B0F" }}
     >
       <div className="w-full max-w-sm space-y-10">
         {/* Header */}

@@ -35,7 +35,7 @@ function ImportProgress() {
   return (
     <main
       className="flex min-h-screen flex-col items-center justify-center gap-12 px-6 text-center"
-      style={{ background: "#0a0a0a" }}
+      style={{ background: "#1c1108" }}
     >
       <div className="space-y-3">
         <h1 className="font-display text-[3.5rem] text-white leading-none">

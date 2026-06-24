@@ -1,46 +1,27 @@
 "use client";
 
+import { MarqueeBanner } from "@/components/recs/MarqueeBanner";
 import { RecRow } from "@/components/recs/RecRow";
-import { type ProfileSummary, type RecItem, getProfileSummary, getRecs } from "@/lib/api";
+import { type RecItem, getRecs } from "@/lib/api";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const SURFACES = [
-  {
-    key: "overall",
-    eyebrow: "Top picks",
-    title: "Made for you.",
-    blurb: "Scored against your taste profile — the films most likely to become favourites.",
-  },
-  {
-    key: "blind_spots",
-    eyebrow: "Blind spots",
-    title: "You should have seen these.",
-    blurb: "Acclaimed, widely-loved films you haven't watched yet.",
-  },
-  {
-    key: "hidden_gems",
-    eyebrow: "Hidden gems",
-    title: "Under the radar.",
-    blurb: "Smaller films with strong critical standing that flew under the radar.",
-  },
+  { key: "overall", title: "Top Picks", blurb: "Overall recommendations based on your taste" },
+  { key: "blind_spots", title: "Blind Spots", blurb: "The biggest films you somehow haven't seen yet" },
+  { key: "hidden_gems", title: "Hidden Gems", blurb: "Niche films that might be your next favorite" },
 ];
 
-const EDGE = "rgba(255,255,255,0.06)";
+const EDGE = "rgba(196,154,60,0.2)";
 
 export default function RecsPage() {
   const { profile } = useParams<{ profile: string }>();
   const [recs, setRecs] = useState<Record<string, RecItem[]>>({});
-  const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      getProfileSummary(profile).catch(() => null),
-      ...SURFACES.map((s) => getRecs(profile, s.key).catch(() => null)),
-    ]).then(([prof, ...sets]) => {
-      setSummary(prof as ProfileSummary | null);
+    Promise.all(SURFACES.map((s) => getRecs(profile, s.key).catch(() => null))).then((sets) => {
       const out: Record<string, RecItem[]> = {};
       sets.forEach((set, i) => {
         out[SURFACES[i].key] = (set as { items: RecItem[] } | null)?.items ?? [];
@@ -57,21 +38,11 @@ export default function RecsPage() {
     }));
   }
 
-  const name = summary?.displayName || summary?.username || null;
-
   return (
     <div className="min-h-screen pb-32">
       {/* Hero */}
       <div className="mx-auto max-w-7xl px-8 pt-14 pb-4">
-        <h1 className="font-display text-[5.5rem] text-white leading-none tracking-tight">
-          {name ? (
-            <>
-              Watch next, <span style={{ color: "rgba(255,255,255,0.42)" }}>{name}.</span>
-            </>
-          ) : (
-            "Watch next."
-          )}
-        </h1>
+        <MarqueeBanner />
       </div>
 
       {loading ? (
@@ -82,17 +53,10 @@ export default function RecsPage() {
           return (
             <section key={s.key} className="mx-auto max-w-7xl px-8 mt-14">
               <div className="border-t pt-8 mb-7" style={{ borderColor: EDGE }}>
-                <p
-                  className="text-[10px] uppercase tracking-[0.22em] font-medium mb-3"
-                  style={{ color: "rgba(255,255,255,0.22)" }}
-                >
-                  {s.eyebrow}
-                </p>
-                <h2 className="font-display text-[2.6rem] text-white leading-tight">{s.title}</h2>
-                <p
-                  className="mt-2 text-[13px] leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.28)" }}
-                >
+                <h2 className="font-display text-[2.8rem] text-white leading-tight tracking-tight">
+                  {s.title}
+                </h2>
+                <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "rgba(240,210,150,0.5)" }}>
                   {s.blurb}
                 </p>
               </div>
@@ -107,12 +71,12 @@ export default function RecsPage() {
               ) : (
                 <div
                   className="rounded-sm px-6 py-8 text-center"
-                  style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${EDGE}` }}
+                  style={{ background: "rgba(196,154,60,0.04)", border: `1px solid ${EDGE}` }}
                 >
-                  <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  <p className="text-[13px]" style={{ color: "rgba(240,210,150,0.45)" }}>
                     Nothing here yet.
                   </p>
-                  <p className="mt-1 text-[12px]" style={{ color: "rgba(255,255,255,0.14)" }}>
+                  <p className="mt-1 text-[12px]" style={{ color: "rgba(240,210,150,0.3)" }}>
                     Import more of your Letterboxd history to populate this section.{" "}
                     <Link
                       href="/"
@@ -136,23 +100,16 @@ function LoadingSkeleton() {
     <>
       {SURFACES.map((s) => (
         <div key={s.key} className="mx-auto max-w-7xl px-8 mt-14">
-          <div className="border-t pt-8 mb-7" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-            <div
-              className="h-2.5 w-16 rounded-full mb-3"
-              style={{ background: "rgba(255,255,255,0.05)" }}
-            />
-            <div className="h-10 w-64 rounded" style={{ background: "rgba(255,255,255,0.05)" }} />
-            <div
-              className="h-3 w-80 rounded mt-3"
-              style={{ background: "rgba(255,255,255,0.03)" }}
-            />
+          <div className="border-t pt-8 mb-7" style={{ borderColor: "rgba(196,154,60,0.2)" }}>
+            <div className="h-10 w-44 rounded" style={{ background: "rgba(196,154,60,0.08)" }} />
+            <div className="h-3 w-64 rounded mt-2" style={{ background: "rgba(196,154,60,0.05)" }} />
           </div>
           <div className="flex gap-3 overflow-hidden">
             {Array.from({ length: 7 }, (_, k) => k).map((k) => (
               <div
                 key={k}
                 className="w-44 shrink-0 rounded-sm"
-                style={{ aspectRatio: "2/3", background: "rgba(255,255,255,0.04)" }}
+                style={{ aspectRatio: "2/3", background: "rgba(196,154,60,0.06)" }}
               />
             ))}
           </div>

@@ -2,9 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Broadway";
+  src: url("/fonts/broadway.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
   @apply text-ink font-sans antialiased;
-  background-color: #0a0a0a;
+  background-color: #1c1108;
 }
 
 /* pattern overlays kept as no-ops so any lingering refs are harmless */
@@ -34,7 +42,7 @@ body {
   }
 }
 .skeleton {
-  background: linear-gradient(90deg, #141414 25%, #1e1e1e 37%, #141414 63%);
+  background: linear-gradient(90deg, #221409 25%, #2e1c0c 37%, #221409 63%);
   background-size: 200% 100%;
   animation: shimmer 1.8s ease infinite;
 }

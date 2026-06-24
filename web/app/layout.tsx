@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Anton, Nunito } from "next/font/google";
+import localFont from "next/font/local";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 
-const display = Anton({
-  subsets: ["latin"],
-  weight: "400",
+const display = localFont({
+  src: "../public/fonts/manbow.otf",
   variable: "--font-display",
   display: "swap",
 });
