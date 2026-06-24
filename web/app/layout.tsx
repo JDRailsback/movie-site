@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Anton, Nunito } from "next/font/google";
 import "./globals.css";
 
+const display = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-display",
+  display: "swap",
+});
 const sans = Nunito({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
@@ -11,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={sans.variable} suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );
