@@ -6,7 +6,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy import Connection, or_, select
+from sqlalchemy import Connection, and_, or_, select
 
 from app.db import tables as t
 from app.domain.recommend import Candidate, Taste
@@ -44,13 +44,21 @@ def load_taste(conn: Connection, profile_id: uuid.UUID) -> Taste | None:
 
 def excluded_film_ids(conn: Connection, profile_id: uuid.UUID) -> set[int]:
     """Films the user has already watched, plus 'not interested'.
-    Watchlist-only entries (no watched_date and no rating) are NOT excluded."""
+
+    Watchlist-only entries are NOT excluded. For export imports, watched films
+    always carry watched_date or rating_0_10. For scrape imports, neither is
+    set for unrated films, so we additionally exclude scrape rows where the
+    film is not purely a watchlist entry (in_watchlist IS NOT TRUE means the
+    user logged it as watched on Letterboxd).
+    """
+    ufr = t.user_film_rating
     watched = conn.execute(
-        select(t.user_film_rating.c.film_id).where(
-            t.user_film_rating.c.profile_id == profile_id,
+        select(ufr.c.film_id).where(
+            ufr.c.profile_id == profile_id,
             or_(
-                t.user_film_rating.c.watched_date.is_not(None),
-                t.user_film_rating.c.rating_0_10.is_not(None),
+                ufr.c.watched_date.is_not(None),
+                ufr.c.rating_0_10.is_not(None),
+                and_(ufr.c.source == "scrape", ufr.c.in_watchlist.is_not(True)),
             ),
         )
     )

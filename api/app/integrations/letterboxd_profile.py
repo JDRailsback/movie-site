@@ -136,12 +136,12 @@ async def scrape_profile(username: str) -> ParsedExport:
             scraper.scrape_watchlist(username),
         )
 
-    # Merge watchlist into the watched set, or add as unwatched-intent entries.
+    # Add unwatched watchlist entries; skip films already logged as watched so
+    # in_watchlist stays False for watched films (the exclusion query relies on
+    # in_watchlist=False to identify scraped watched-but-unrated films).
     by_uri: dict[str, FilmRecord] = {f.lb_uri: f for f in films}
     for wl in watchlist:
-        if wl.lb_uri in by_uri:
-            by_uri[wl.lb_uri].in_watchlist = True
-        else:
+        if wl.lb_uri not in by_uri:
             wl.in_watchlist = True
             by_uri[wl.lb_uri] = wl
 
