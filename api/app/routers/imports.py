@@ -68,9 +68,7 @@ async def create_import_from_export(request: Request, file: UploadFile) -> Impor
 
 
 @router.post("/by-username", status_code=status.HTTP_202_ACCEPTED)
-async def create_import_from_username(
-    request: Request, body: ByUsernameRequest
-) -> ImportCreated:
+async def create_import_from_username(request: Request, body: ByUsernameRequest) -> ImportCreated:
     """Scrape a public Letterboxd profile by username."""
     username = body.username.strip().lower()
     if not username or not _USERNAME_RE.match(username):

@@ -181,6 +181,7 @@ def recommend(
         # TEST ONLY — blend lb_rating + log10(lb_watch_count).
         # Calibrated so 4.5/200k ≈ 4.0/2M (revert to lb_rating sort when done).
         import math
+
         scored.sort(
             key=lambda x: (
                 2.0 * (x[1].lb_rating if x[1].lb_rating is not None else x[1].weighted_rating / 2)

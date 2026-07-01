@@ -7,6 +7,7 @@ Run inside the api container:
 
 Each run is idempotent — existing films are upserted, so re-running refreshes data.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -24,20 +25,20 @@ from app.repositories import film_repo
 from app.services.import_pipeline import IMPORT_CORPUS_MEAN
 
 # General pass: top films sorted by vote count (20 films per page)
-DEFAULT_PAGES = 200       # 4,000 films
+DEFAULT_PAGES = 200  # 4,000 films
 DEFAULT_VOTE_FLOOR = 200  # low enough to catch quality niche films
 
 # Supplemental genre passes for genres under-represented in the popularity sort.
 # (genre_id, label, pages, vote_floor)
 GENRE_PASSES: list[tuple[int, str, int, int]] = [
-    (37,    "western",   40,  30),
-    (16,    "animation", 60, 100),
-    (36,    "history",   40,  30),
-    (9648,  "mystery",   40,  50),
-    (10749, "romance",   50,  50),
-    (10752, "war",       30,  30),
-    (14,    "fantasy",   50,  50),
-    (878,   "sci-fi",    50,  50),
+    (37, "western", 40, 30),
+    (16, "animation", 60, 100),
+    (36, "history", 40, 30),
+    (9648, "mystery", 40, 50),
+    (10749, "romance", 50, 50),
+    (10752, "war", 30, 30),
+    (14, "fantasy", 50, 50),
+    (878, "sci-fi", 50, 50),
 ]
 
 

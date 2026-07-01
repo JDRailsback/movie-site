@@ -93,11 +93,7 @@ class LbProfileScraper:
         records: dict[str, FilmRecord] = {}
         page = 1
         while True:
-            path = (
-                f"/{username}/watchlist/"
-                if page == 1
-                else f"/{username}/watchlist/page/{page}/"
-            )
+            path = f"/{username}/watchlist/" if page == 1 else f"/{username}/watchlist/page/{page}/"
             html = await self._get(path)
             if html is None:
                 break

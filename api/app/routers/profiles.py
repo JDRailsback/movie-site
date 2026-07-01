@@ -63,9 +63,7 @@ async def refresh_profile(request: Request, profile_id: str) -> ImportCreated:
             return profile_repo.get_or_create_profile(conn, username, source="scrape")
 
     _, import_id = await asyncio.to_thread(_create_import)
-    await request.app.state.redis.set(
-        SCRAPE_KEY.format(import_id=import_id), username, ex=3600
-    )
+    await request.app.state.redis.set(SCRAPE_KEY.format(import_id=import_id), username, ex=3600)
     await request.app.state.arq.enqueue_job("run_import", str(import_id))
     return ImportCreated(import_id=str(import_id), profile_id=str(pid))
 
@@ -169,10 +167,9 @@ async def get_match(profile_id: str, with_: str = Query(alias="with")) -> MatchR
                 return {"missing_taste": True}
             summary_a = taste_repo.get_profile_summary(conn, pid_a)
             summary_b = taste_repo.get_profile_summary(conn, pid_b)
-            exclude = (
-                recommend_repo.excluded_film_ids(conn, pid_a)
-                | recommend_repo.excluded_film_ids(conn, pid_b)
-            )
+            exclude = recommend_repo.excluded_film_ids(
+                conn, pid_a
+            ) | recommend_repo.excluded_film_ids(conn, pid_b)
             candidates = recommend_repo.load_candidates(conn, exclude)
             return {
                 "taste_a": taste_a,
@@ -258,8 +255,13 @@ async def get_discover(
             exclude = recommend_repo.excluded_film_ids(conn, pid)
             candidates = recommend_repo.load_candidates(conn, exclude)
             return discover_domain.discover(
-                candidates, taste,
-                genre=genre, era=era, length=length, popularity=popularity, language=language,
+                candidates,
+                taste,
+                genre=genre,
+                era=era,
+                length=length,
+                popularity=popularity,
+                language=language,
             )
 
     raw = await asyncio.to_thread(_load)

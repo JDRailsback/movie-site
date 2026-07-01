@@ -20,8 +20,8 @@ def _cosine(a: dict, b: dict) -> float:
     if not common:
         return 0.0
     dot = sum(a[k] * b[k] for k in common)
-    mag_a = math.sqrt(sum(v ** 2 for v in a.values()))
-    mag_b = math.sqrt(sum(v ** 2 for v in b.values()))
+    mag_a = math.sqrt(sum(v**2 for v in a.values()))
+    mag_b = math.sqrt(sum(v**2 for v in b.values()))
     if mag_a == 0 or mag_b == 0:
         return 0.0
     return max(-1.0, min(1.0, dot / (mag_a * mag_b)))
@@ -38,8 +38,11 @@ def compatibility(taste_a: Taste, taste_b: Taste) -> dict[str, Any]:
 
     # Genres both rate positively — sorted by combined strength
     shared_ids = sorted(
-        [g for g in set(taste_a.genre) & set(taste_b.genre)
-         if taste_a.genre[g] > 0.1 and taste_b.genre[g] > 0.1],
+        [
+            g
+            for g in set(taste_a.genre) & set(taste_b.genre)
+            if taste_a.genre[g] > 0.1 and taste_b.genre[g] > 0.1
+        ],
         key=lambda g: taste_a.genre[g] + taste_b.genre[g],
         reverse=True,
     )
@@ -51,7 +54,8 @@ def compatibility(taste_a: Taste, taste_b: Taste) -> dict[str, Any]:
 
     # Genres where preferences meaningfully diverge
     divergent_ids = [
-        g for g in set(taste_a.genre) & set(taste_b.genre)
+        g
+        for g in set(taste_a.genre) & set(taste_b.genre)
         if abs(taste_a.genre[g] - taste_b.genre[g]) > 0.4
     ]
     divergent_genres = [
@@ -104,9 +108,7 @@ def co_watch_recommend(
         joint = 2 * sa * sb / (sa + sb) if (sa + sb) > 0 else 0.0
 
         # Taste-first, exactly like the "overall" surface (quality is just a tiebreaker)
-        quality_norm = (
-            c.lb_rating / 5.0 if c.lb_rating is not None else c.weighted_rating / 10.0
-        )
+        quality_norm = c.lb_rating / 5.0 if c.lb_rating is not None else c.weighted_rating / 10.0
         sort_key = joint + 0.15 * quality_norm
         results.append((sort_key, sa, sb, c))
 
@@ -122,13 +124,15 @@ def co_watch_recommend(
 
         joint = 2 * sa * sb / (sa + sb) if (sa + sb) > 0 else 0.0
         _, contrib = score(c, taste_a, w)
-        out.append({
-            "candidate": c,
-            "score": round(joint, 4),
-            "fit": fit_percent(joint),
-            "components": {k: round(v, 4) for k, v in contrib.items()},
-            "explanation": _explain(c, taste_a, taste_b),
-        })
+        out.append(
+            {
+                "candidate": c,
+                "score": round(joint, 4),
+                "fit": fit_percent(joint),
+                "components": {k: round(v, 4) for k, v in contrib.items()},
+                "explanation": _explain(c, taste_a, taste_b),
+            }
+        )
         if len(out) >= limit:
             break
     return out
@@ -138,7 +142,8 @@ def _explain(c: Candidate, taste_a: Taste, taste_b: Taste) -> dict[str, Any]:
     reasons: list[str] = []
 
     shared_liked = [
-        gn for g, gn in zip(c.genres, c.genre_names, strict=False)
+        gn
+        for g, gn in zip(c.genres, c.genre_names, strict=False)
         if taste_a.genre.get(g, 0) > 0.1 and taste_b.genre.get(g, 0) > 0.1
     ]
     if shared_liked:

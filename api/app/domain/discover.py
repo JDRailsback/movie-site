@@ -1,4 +1,5 @@
 """Discover: quiz-driven film recommendation. Pure, unit-testable."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,20 +17,20 @@ from app.domain.recommend import (
 
 # TMDB genre ID(s) per selectable genre name
 _GENRE_IDS: dict[str, set[int]] = {
-    "action":    {28},
+    "action": {28},
     "adventure": {12},
     "animation": {16},
-    "comedy":    {35},
-    "crime":     {80},
-    "drama":     {18},
-    "fantasy":   {14},
-    "horror":    {27},
-    "mystery":   {9648},
-    "romance":   {10749},
-    "sci-fi":    {878},
-    "thriller":  {53},
-    "western":   {37},
-    "history":   {36},
+    "comedy": {35},
+    "crime": {80},
+    "drama": {18},
+    "fantasy": {14},
+    "horror": {27},
+    "mystery": {9648},
+    "romance": {10749},
+    "sci-fi": {878},
+    "thriller": {53},
+    "western": {37},
+    "history": {36},
 }
 
 
@@ -110,13 +111,15 @@ def discover(
         if dir_count.get(d, 0) >= 1:
             continue
         dir_count[d] = dir_count.get(d, 0) + 1
-        out.append({
-            "candidate": c,
-            "score": round(s, 4),
-            "fit": fit_percent(s),
-            "components": {k: round(v, 4) for k, v in contrib.items()},
-            "explanation": _explain(c, taste, "overall"),
-        })
+        out.append(
+            {
+                "candidate": c,
+                "score": round(s, 4),
+                "fit": fit_percent(s),
+                "components": {k: round(v, 4) for k, v in contrib.items()},
+                "explanation": _explain(c, taste, "overall"),
+            }
+        )
         if len(out) >= limit:
             break
     return out
