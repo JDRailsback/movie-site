@@ -186,16 +186,28 @@ async def get_match(profile_id: str, with_: str = Query(alias="with")) -> MatchR
     if data is None:
         raise HTTPException(
             status_code=404,
-            detail={"error": {"code": "profile_not_found", "message": f"profile '{with_}' not found — import them first"}},
+            detail={
+                "error": {
+                    "code": "profile_not_found",
+                    "message": f"profile '{with_}' not found — import them first",
+                }
+            },
         )
     if data.get("missing_taste"):
         raise HTTPException(
             status_code=422,
-            detail={"error": {"code": "taste_not_ready", "message": "one or both profiles need more films imported before matching"}},
+            detail={
+                "error": {
+                    "code": "taste_not_ready",
+                    "message": "one or both profiles need more films imported before matching",
+                }
+            },
         )
 
     compat = match_domain.compatibility(data["taste_a"], data["taste_b"])
-    raw_items = match_domain.co_watch_recommend(data["candidates"], data["taste_a"], data["taste_b"])
+    raw_items = match_domain.co_watch_recommend(
+        data["candidates"], data["taste_a"], data["taste_b"]
+    )
 
     items = [
         RecommendationItem(
@@ -254,7 +266,9 @@ async def get_discover(
     if raw is None:
         raise HTTPException(
             status_code=422,
-            detail={"error": {"code": "taste_not_ready", "message": "taste profile not computed yet"}},
+            detail={
+                "error": {"code": "taste_not_ready", "message": "taste profile not computed yet"}
+            },
         )
 
     return [

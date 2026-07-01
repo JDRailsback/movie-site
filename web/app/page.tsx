@@ -72,8 +72,12 @@ export default function Dashboard() {
       for (let i = 0; i < 180; i++) {
         await new Promise((r) => setTimeout(r, 2000));
         const st = await getImportStatus(importId);
-        if (st.status === "ready") { ready = true; break; }
-        if (st.status === "failed") throw new Error(st.error ?? "Import failed — check the username.");
+        if (st.status === "ready") {
+          ready = true;
+          break;
+        }
+        if (st.status === "failed")
+          throw new Error(st.error ?? "Import failed — check the username.");
         setStage(st.status);
       }
       if (!ready) throw new Error("Import timed out.");
@@ -85,7 +89,9 @@ export default function Dashboard() {
       ]);
 
       const next: Record<string, RecItem[]> = {};
-      sets.forEach((set, i) => { next[SURFACES[i].key] = set.items; });
+      sets.forEach((set, i) => {
+        next[SURFACES[i].key] = set.items;
+      });
       setRecs(next);
       setWatchlist(wl);
 
@@ -94,7 +100,11 @@ export default function Dashboard() {
         ? rated.reduce((a, f) => a + (f.rating as number), 0) / rated.length
         : null;
       const counts: Record<string, number> = {};
-      films.forEach((f) => f.genres?.forEach((g) => { counts[g] = (counts[g] ?? 0) + 1; }));
+      for (const f of films) {
+        for (const g of f.genres ?? []) {
+          counts[g] = (counts[g] ?? 0) + 1;
+        }
+      }
       const topGenre = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
       setStats({ count: films.length, avg, topGenre });
     } catch (err) {
@@ -192,12 +202,16 @@ export default function Dashboard() {
             </span>
             {stats.avg != null && (
               <span>
-                <strong style={{ color: "var(--text)", fontWeight: 700 }}>★ {stats.avg.toFixed(1)}</strong> average
+                <strong style={{ color: "var(--text)", fontWeight: 700 }}>
+                  ★ {stats.avg.toFixed(1)}
+                </strong>{" "}
+                average
               </span>
             )}
             {stats.topGenre && (
               <span>
-                top genre <strong style={{ color: "var(--text)", fontWeight: 700 }}>{stats.topGenre}</strong>
+                top genre{" "}
+                <strong style={{ color: "var(--text)", fontWeight: 700 }}>{stats.topGenre}</strong>
               </span>
             )}
           </div>

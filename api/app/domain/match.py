@@ -6,9 +6,9 @@ import math
 from typing import Any
 
 from app.domain.recommend import (
+    _BASE_WEIGHTS,
     Candidate,
     Taste,
-    _BASE_WEIGHTS,
     fit_percent,
     score,
 )
@@ -138,7 +138,7 @@ def _explain(c: Candidate, taste_a: Taste, taste_b: Taste) -> dict[str, Any]:
     reasons: list[str] = []
 
     shared_liked = [
-        gn for g, gn in zip(c.genres, c.genre_names)
+        gn for g, gn in zip(c.genres, c.genre_names, strict=False)
         if taste_a.genre.get(g, 0) > 0.1 and taste_b.genre.get(g, 0) > 0.1
     ]
     if shared_liked:

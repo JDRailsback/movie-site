@@ -4,12 +4,14 @@ from __future__ import annotations
 from typing import Any
 
 from app.domain.recommend import (
+    WEIGHTS,
     Candidate,
     Taste,
-    WEIGHTS,
-    score as taste_score,
-    fit_percent,
     _explain,
+    fit_percent,
+)
+from app.domain.recommend import (
+    score as taste_score,
 )
 
 # TMDB genre ID(s) per selectable genre name
@@ -49,7 +51,11 @@ def discover(
         # Length
         if length == "short" and (c.runtime_min is None or c.runtime_min > 95):
             continue
-        if length == "standard" and c.runtime_min is not None and (c.runtime_min < 80 or c.runtime_min > 135):
+        if (
+            length == "standard"
+            and c.runtime_min is not None
+            and (c.runtime_min < 80 or c.runtime_min > 135)
+        ):
             continue
         if length == "epic" and (c.runtime_min is None or c.runtime_min < 130):
             continue

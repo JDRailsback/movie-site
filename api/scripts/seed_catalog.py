@@ -9,8 +9,8 @@ Each run is idempotent — existing films are upserted, so re-running refreshes 
 """
 from __future__ import annotations
 
-import asyncio
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 
@@ -100,7 +100,10 @@ async def seed(pages: int = DEFAULT_PAGES, vote_floor: int = DEFAULT_VOTE_FLOOR)
 
         # Supplemental genre passes
         for genre_id, label, genre_pages, genre_floor in GENRE_PASSES:
-            print(f"Genre '{label}': {genre_pages} pages, vote_count >= {genre_floor} ...", flush=True)
+            print(
+                f"Genre '{label}': {genre_pages} pages, vote_count >= {genre_floor} ...",
+                flush=True,
+            )
             genre_total = 0
             for page in range(1, genre_pages + 1):
                 n = await _fetch_and_store(
@@ -121,7 +124,17 @@ async def seed(pages: int = DEFAULT_PAGES, vote_floor: int = DEFAULT_VOTE_FLOOR)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Seed film catalog from TMDB")
-    parser.add_argument("--pages", type=int, default=DEFAULT_PAGES, help="General pass page count (default 200 = 4000 films)")
-    parser.add_argument("--vote-floor", type=int, default=DEFAULT_VOTE_FLOOR, help="Minimum vote count for general pass")
+    parser.add_argument(
+        "--pages",
+        type=int,
+        default=DEFAULT_PAGES,
+        help="General pass page count (default 200 = 4000 films)",
+    )
+    parser.add_argument(
+        "--vote-floor",
+        type=int,
+        default=DEFAULT_VOTE_FLOOR,
+        help="Minimum vote count for general pass",
+    )
     args = parser.parse_args()
     asyncio.run(seed(pages=args.pages, vote_floor=args.vote_floor))

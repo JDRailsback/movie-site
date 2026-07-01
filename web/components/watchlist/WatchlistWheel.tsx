@@ -4,14 +4,14 @@ import { type FilmCard, posterUrl } from "@/lib/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const POSTER_W = 132;
-const POSTER_H = 198;            // 2:3
+const POSTER_H = 198; // 2:3
 const GAP = 12;
 const ITEM_H = POSTER_H + GAP;
-const SLOTS = 9;                  // DOM nodes in the virtual reel
-const ROTATIONS = 3;             // full cycles before landing
+const SLOTS = 9; // DOM nodes in the virtual reel
+const ROTATIONS = 3; // full cycles before landing
 
 function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
+  return 1 - (1 - t) ** 3;
 }
 
 // A vertical reel that fills the column height and spins downward (posters
@@ -53,10 +53,13 @@ export function WatchlistWheel({ films }: { films: FilmCard[] }) {
   filmsRef.current = shuffled;
 
   useEffect(() => {
-    shuffled.forEach((f) => {
+    for (const f of shuffled) {
       const u = posterUrl(f.posterPath);
-      if (u) { const i = new Image(); i.src = u; }
-    });
+      if (u) {
+        const i = new Image();
+        i.src = u;
+      }
+    }
   }, [shuffled]);
 
   const centerOffset = useCallback(
@@ -86,20 +89,23 @@ export function WatchlistWheel({ films }: { films: FilmCard[] }) {
     }
   }, []);
 
-  const initReel = useCallback((el: HTMLDivElement | null) => {
-    if (!el) return;
-    const fs = filmsRef.current;
-    if (!fs.length) return;
-    containerH.current = el.clientHeight || 400;
-    const startIdx = Math.floor(Math.random() * fs.length);
-    const initialAbs = fs.length * 6 + startIdx; // high so we can scroll down for a while
-    baseAbs.current = initialAbs;
-    const pos = centerOffset(initialAbs);
-    scrollPos.current = pos;
-    slotFilm.current.fill(-1);
-    updateSlots(pos);
-    setWinner(fs[startIdx]);
-  }, [centerOffset, updateSlots]);
+  const initReel = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (!el) return;
+      const fs = filmsRef.current;
+      if (!fs.length) return;
+      containerH.current = el.clientHeight || 400;
+      const startIdx = Math.floor(Math.random() * fs.length);
+      const initialAbs = fs.length * 6 + startIdx; // high so we can scroll down for a while
+      baseAbs.current = initialAbs;
+      const pos = centerOffset(initialAbs);
+      scrollPos.current = pos;
+      slotFilm.current.fill(-1);
+      updateSlots(pos);
+      setWinner(fs[startIdx]);
+    },
+    [centerOffset, updateSlots],
+  );
 
   function spin() {
     if (spinning || shuffled.length < 2) return;
@@ -108,7 +114,7 @@ export function WatchlistWheel({ films }: { films: FilmCard[] }) {
     const N = shuffled.length;
     const winIdx = Math.floor(Math.random() * N);
     const b = ((baseAbs.current % N) + N) % N;
-    const down0 = ((b - winIdx) % N + N) % N;       // steps down to bring winner to center
+    const down0 = (((b - winIdx) % N) + N) % N; // steps down to bring winner to center
     const targetAbs = baseAbs.current - (N * ROTATIONS + (down0 === 0 ? N : down0));
     const startPos = scrollPos.current;
     const endPos = centerOffset(targetAbs);
@@ -150,9 +156,13 @@ export function WatchlistWheel({ films }: { films: FilmCard[] }) {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
       {/* Reel — fills available vertical space */}
-      <div ref={initReel} style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
+      <div
+        ref={initReel}
+        style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}
+      >
         {Array.from({ length: SLOTS }, (_, s) => (
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-size virtual reel — slot index is the stable identity, films swap via ref imperatively
             key={s}
             ref={slotRefs.current[s]}
             style={{
@@ -175,8 +185,30 @@ export function WatchlistWheel({ films }: { films: FilmCard[] }) {
           </div>
         ))}
         {/* Edge fades blend the reel into the background */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "24%", background: "linear-gradient(to bottom, var(--bg), transparent)", pointerEvents: "none", zIndex: 2 }} />
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "24%", background: "linear-gradient(to top, var(--bg), transparent)", pointerEvents: "none", zIndex: 2 }} />
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "24%",
+            background: "linear-gradient(to bottom, var(--bg), transparent)",
+            pointerEvents: "none",
+            zIndex: 2,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "24%",
+            background: "linear-gradient(to top, var(--bg), transparent)",
+            pointerEvents: "none",
+            zIndex: 2,
+          }}
+        />
       </div>
 
       {/* Winner */}
