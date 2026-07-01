@@ -15,7 +15,7 @@ import asyncio
 import re
 
 from bs4 import BeautifulSoup
-from curl_cffi.requests import AsyncSession
+from curl_cffi.requests import AsyncSession, Response
 
 from app.domain.letterboxd_export import FilmRecord, ParsedExport
 
@@ -26,7 +26,9 @@ _PAGE_DELAY = 0.8  # seconds between pages — polite pacing
 class LbProfileScraper:
     def __init__(self, *, timeout: float = 20.0) -> None:
         # impersonate="chrome120" sends Chrome's TLS fingerprint, passing Cloudflare checks
-        self._session = AsyncSession(impersonate="chrome120", timeout=timeout)
+        self._session: AsyncSession[Response] = AsyncSession(
+            impersonate="chrome120", timeout=timeout
+        )
 
     async def aclose(self) -> None:
         await self._session.close()

@@ -14,7 +14,7 @@ from app.domain.recommend import (
 )
 
 
-def _cosine(a: dict, b: dict) -> float:
+def _cosine[K](a: dict[K, float], b: dict[K, float]) -> float:
     """Cosine similarity of two sparse real-valued vectors. Returns -1..1."""
     common = set(a) & set(b)
     if not common:

@@ -46,7 +46,7 @@ def discover(
     limit: int = 3,
 ) -> list[dict[str, Any]]:
     w = WEIGHTS["overall"]
-    scored: list[tuple[float, Candidate, dict]] = []
+    scored: list[tuple[float, Candidate, dict[str, float]]] = []
 
     for c in candidates:
         # Length
