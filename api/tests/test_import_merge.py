@@ -16,6 +16,7 @@ def test_merge_prefers_watched_and_combines_signals() -> None:
         "watched_date": None,
         "review_text": None,
         "in_watchlist": True,
+        "watched": False,
         "source": "export",
     }
     # a second entry for the same film: watched, rated, liked, reviewed
@@ -35,3 +36,4 @@ def test_merge_prefers_watched_and_combines_signals() -> None:
     assert row["review_text"] == "great"
     assert row["watched_date"] == date(2020, 1, 1)
     assert row["in_watchlist"] is False  # watched wins over watchlist-only
+    assert row["watched"] is True

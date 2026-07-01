@@ -201,8 +201,13 @@ def _merge_rating(row: dict[str, Any], f: FilmRecord) -> None:
     row["review_text"] = row["review_text"] or f.review_text
     if f.watched_date and (row["watched_date"] is None or f.watched_date > row["watched_date"]):
         row["watched_date"] = f.watched_date
-    row["in_watchlist"] = row["in_watchlist"] or f.in_watchlist
     row["watched"] = row["watched"] or f.watched
+    row["in_watchlist"] = row["in_watchlist"] or f.in_watchlist
+    if row["watched"]:
+        # A watched entry supersedes a stale watchlist-only signal — Letterboxd
+        # removes films from the watchlist once watched, so a merged row that's
+        # watched should never still appear on the watchlist page.
+        row["in_watchlist"] = False
 
 
 def _persist(
