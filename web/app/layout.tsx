@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Nunito } from "next/font/google";
+import { Spectral } from "next/font/google";
 import "./globals.css";
 
-const display = localFont({
-  src: "../public/fonts/manbow.otf",
-  variable: "--font-display",
+const spectral = Spectral({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
   display: "swap",
 });
-const sans = Nunito({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Recs — personalized film recommendations",
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+    <html lang="en" className={spectral.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );

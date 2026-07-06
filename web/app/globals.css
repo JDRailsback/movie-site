@@ -2,67 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "Broadway";
-  src: url("/fonts/broadway.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+:root {
+  --bg: #faf9f6;
+  --text: #16140f;
+  --muted: #4f4a40;
+  --line: #d4cdbe;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  @apply text-ink font-sans antialiased;
-  background-color: #1c1108;
+  margin: 0;
+  font-family: var(--font-sans), Georgia, serif;
+  font-weight: 500;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* pattern overlays kept as no-ops so any lingering refs are harmless */
-.pat-dots,
-.pat-stripes,
-.pat-checks,
-.pat-grid {
-  background-image: none;
-}
-
-/* soft, minimal card + chip surfaces — dark theme */
-.brutal {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -20px rgba(0, 0, 0, 0.5);
-}
-.brutal-sm {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-.skeleton {
-  background: linear-gradient(90deg, #221409 25%, #2e1c0c 37%, #221409 63%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease infinite;
-}
-
-/* Hide scrollbars while keeping scroll functionality */
-.no-scrollbar {
-  -ms-overflow-style: none;
+.poster-row {
   scrollbar-width: none;
 }
-.no-scrollbar::-webkit-scrollbar {
+.poster-row::-webkit-scrollbar {
   display: none;
 }
 
-/* Respect reduced motion everywhere */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
 }

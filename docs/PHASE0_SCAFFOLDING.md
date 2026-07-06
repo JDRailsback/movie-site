@@ -7,6 +7,13 @@
 > uploaded, a corpus seed job runs, and the import state machine advances through
 > its stages (even if stages are stubs).
 
+> **Note (current build, 2026-06-30):** the `api/` tree below still matches
+> reality fairly closely. The `web/` tree does not — the frontend was
+> simplified to a single page with no auth, no per-profile routes, and no
+> `components/ui|film|charts` split (see [PLAN.md](PLAN.md)'s note and the root
+> [README.md](../README.md) "Current state"). Treat the `web/` portion of §1 and
+> the auth rows in §4 as the original target, not the current layout.
+
 ---
 
 ## 1. Repository layout (monorepo)

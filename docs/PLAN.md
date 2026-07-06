@@ -4,6 +4,16 @@
 > source of truth for architecture and product decisions until superseded.
 > Last updated: 2026-06-02.
 
+> **Note (current build, 2026-06-30):** the live frontend deliberately diverged
+> from §10/§1 below. It's a single page (`web/app/page.tsx`) with no accounts,
+> no magic-link auth, no per-profile routes, no compare/share routes, and no
+> Framer Motion — every visit reimports the Letterboxd username fresh and shows
+> three rec rows + a watchlist spinner. This was a conscious simplification, not
+> drift; treat §1, §10, and the auth/social sections below as the longer-term
+> target if/when the product grows back out, not as a description of what's
+> running today. See the root [README.md](../README.md) "Current state" section
+> for what's actually built.
+
 A web app for serious film lovers who use Letterboxd. The user provides their
 Letterboxd data; the app builds a rich, multi-dimensional **taste profile** and
 generates explainable, personalized recommendations across multiple discovery
