@@ -12,6 +12,7 @@ Rate-limiting: sequential page fetches within each list with a short delay.
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 
 from bs4 import BeautifulSoup
@@ -21,6 +22,8 @@ from app.domain.letterboxd_export import FilmRecord, ParsedExport
 
 BASE_URL = "https://letterboxd.com"
 _PAGE_DELAY = 0.8  # seconds between pages — polite pacing
+
+logger = logging.getLogger(__name__)
 
 
 class LbProfileScraper:
@@ -42,9 +45,13 @@ class LbProfileScraper:
     async def _get(self, path: str) -> str | None:
         try:
             r = await self._session.get(BASE_URL + path)
-            return r.text if r.status_code == 200 else None
-        except Exception:
+        except Exception as e:
+            logger.warning("GET %s -> %s: %s", path, type(e).__name__, e)
             return None
+        if r.status_code != 200:
+            logger.warning("GET %s -> HTTP %s; body[:300]=%r", path, r.status_code, r.text[:300])
+            return None
+        return r.text
 
     async def check_user(self, username: str) -> str | None:
         """Return a display name if the user exists and is public, else None."""
