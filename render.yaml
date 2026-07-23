@@ -1,0 +1,51 @@
+# Render Blueprint — deploys the API + background worker without Docker,
+# using Render's native Python runtime. See docs/DEPLOYMENT.md for the full
+# walkthrough (this also needs a Neon Postgres DB and an Upstash Redis
+# instance, which Render doesn't provision itself).
+#
+# Deploy: Render dashboard → New → Blueprint → point at this repo.
+
+services:
+  - type: web
+    name: movie-rec-api
+    runtime: python
+    rootDir: api
+    plan: free
+    buildCommand: pip install .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Neon connection string, e.g. postgresql+psycopg://...?sslmode=require
+      - key: REDIS_URL
+        sync: false # Upstash connection string, rediss://...
+      - key: TMDB_API_KEY
+        sync: false
+      - key: TMDB_READ_TOKEN
+        sync: false
+      - key: APP_BASE_URL
+        sync: false # the deployed Vercel URL, e.g. https://your-app.vercel.app — used for CORS
+      - key: MODEL_VERSION
+        value: "2026.06.0"
+      - key: CORPUS_VOTE_COUNT_FLOOR
+        value: "200"
+      - key: DEFAULT_REGION
+        value: "US"
+
+  - type: worker
+    name: movie-rec-worker
+    runtime: python
+    rootDir: api
+    plan: free
+    buildCommand: pip install .
+    startCommand: arq workers.arq_app.WorkerSettings
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: TMDB_API_KEY
+        sync: false
+      - key: TMDB_READ_TOKEN
+        sync: false
+      - key: DEFAULT_REGION
+        value: "US"

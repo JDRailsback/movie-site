@@ -43,7 +43,15 @@ make seed                   # (optional) pull a starter corpus slice from TMDB
 - Web: http://localhost:3000
 - API: http://localhost:8000 ([docs](http://localhost:8000/docs), `/health`)
 
-Other commands: `make help`. To run checks the way CI does:
+Other commands: `make help`.
+
+## Deploying
+
+Docker is only for local dev — [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+walks through a free, no-Docker public deploy: Vercel (web) + Render (API +
+worker, via [`render.yaml`](render.yaml)) + Neon (Postgres) + Upstash (Redis).
+
+To run checks the way CI does:
 
 ```bash
 # api/
