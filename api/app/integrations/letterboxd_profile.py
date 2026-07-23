@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class LbProfileScraper:
-    def __init__(self, *, timeout: float = 20.0) -> None:
+    def __init__(self, *, timeout: float = 45.0) -> None:
         # impersonate="chrome120" sends Chrome's TLS fingerprint, passing Cloudflare checks
         self._session: AsyncSession[Response] = AsyncSession(
             impersonate="chrome120", timeout=timeout
