@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     corpus_vote_count_floor: int = 200
     model_version: str = "2026.06.0"
 
+    # deployment: run the arq worker as a background task inside this process
+    # instead of a separate service. Set true on hosts (like Render's free
+    # plan) that don't offer a free standalone background-worker service type.
+    run_worker_in_process: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:

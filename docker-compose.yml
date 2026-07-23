@@ -1,6 +1,8 @@
 # Local dev stack. `make up` brings everything up.
-# Free-tier posture (PLAN §18): in prod these map to Neon/Upstash/Vercel/Fly,
-# but locally we run the real services in containers.
+# Free-tier posture (docs/DEPLOYMENT.md): in prod these map to
+# Neon/Upstash/Vercel/Render, but locally we run the real services in
+# containers, with api/worker as separate processes (in prod they're combined
+# into one Render web service — see RUN_WORKER_IN_PROCESS in app/main.py).
 
 services:
   postgres:

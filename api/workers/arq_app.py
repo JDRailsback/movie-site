@@ -11,6 +11,7 @@ import asyncio
 from typing import Any
 
 from arq.connections import RedisSettings
+from arq.typing import WorkerCoroutine
 
 from app.config import get_settings
 from app.db.base import get_engine
@@ -74,7 +75,7 @@ async def precompute_recs(ctx: dict[str, Any], profile_id: str) -> None:
 
 
 class WorkerSettings:
-    functions = [run_import, enrich_films, corpus_refresh, precompute_recs]
+    functions: list[WorkerCoroutine] = [run_import, enrich_films, corpus_refresh, precompute_recs]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(settings.redis_url)

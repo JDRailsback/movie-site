@@ -8,12 +8,24 @@ required to start.
 
 ## 1. Postgres — Neon
 
-1. [neon.tech](https://neon.tech) → new project → note the connection string
-   it gives you (`postgresql://user:pass@host/dbname?sslmode=require`).
-2. Rewrite the scheme for SQLAlchemy's psycopg driver:
-   `postgresql+psycopg://user:pass@host/dbname?sslmode=require`. This is
-   your `DATABASE_URL`.
-3. Enable the `vector` extension once, from Neon's SQL editor:
+1. Sign up at [console.neon.tech/signup](https://console.neon.tech/signup)
+   (email, GitHub, or Google — no credit card for the free tier) and create a
+   project. Neon gives it a default `production` branch with a database and
+   compute already provisioned.
+2. On the Project Dashboard, click **Connect** → pick the branch/database/role
+   → copy the connection string. Neon gives you two variants:
+   - **Pooled** (hostname ends in `-pooler`) — use this one for the app's
+     `DATABASE_URL` (Render's API service makes many short-lived connections;
+     pooling handles that better on the free tier).
+   - **Direct** (no `-pooler`) — use this one *once*, locally, for running
+     `alembic upgrade head` (schema migrations can misbehave through
+     PgBouncer's transaction-pooling mode).
+3. Rewrite the scheme for SQLAlchemy's psycopg driver — Neon gives you
+   `postgresql://...`, change it to `postgresql+psycopg://...`. That's your
+   `DATABASE_URL`. If psycopg complains about `channel_binding=require` in
+   the query string, just drop that parameter.
+4. Enable the `vector` extension once, from Neon's SQL editor (Dashboard →
+   SQL Editor):
    ```sql
    CREATE EXTENSION IF NOT EXISTS vector;
    CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -26,11 +38,17 @@ required to start.
 
 ## 3. API + worker — Render
 
+Render's free plan only supports the **web** service type — background
+workers need a paid plan. So instead of a separate worker service, the API
+runs the arq worker as a background task inside the same process
+(`RUN_WORKER_IN_PROCESS=true`, already set in `render.yaml`). Local dev via
+`docker-compose` is unaffected — it still runs `api` and `worker` as separate
+containers.
+
 1. Push this repo to GitHub (already done) → Render dashboard → **New →
    Blueprint** → point it at the repo. Render reads [`render.yaml`](../render.yaml)
-   at the root and creates two free services: `movie-rec-api` (web) and
-   `movie-rec-worker` (background worker), both built from `api/` with
-   Render's native Python runtime — no Dockerfile involved.
+   at the root and creates one free web service, `movie-rec-api`, built from
+   `api/` with Render's native Python runtime — no Dockerfile involved.
 2. When prompted, fill in the env vars marked `sync: false`:
    `DATABASE_URL`, `REDIS_URL` (from steps 1–2), `TMDB_API_KEY`,
    `TMDB_READ_TOKEN` ([themoviedb.org](https://www.themoviedb.org/settings/api)),
@@ -49,7 +67,8 @@ required to start.
    similar) — you'll need it for step 4 below.
 
 Render's free web services spin down after inactivity and take ~30–60s to
-wake on the next request; the free worker does not spin down.
+wake on the next request — the embedded worker spins down with it, so a
+queued import just resumes once the next request wakes the service back up.
 
 ## 4. Web — Vercel
 
