@@ -4,6 +4,7 @@ import { PosterRow } from "@/components/recs/PosterRow";
 import { WatchlistWheel } from "@/components/watchlist/WatchlistWheel";
 import {
   type FilmCard,
+  type ImportCreated,
   type ImportState,
   type RecItem,
   getFilms,
@@ -11,6 +12,7 @@ import {
   getRecs,
   getWatchlist,
   importByUsername,
+  uploadExport,
 } from "@/lib/api";
 import { useRef, useState } from "react";
 
@@ -59,16 +61,15 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  async function startImport(e?: React.FormEvent) {
-    e?.preventDefault();
-    const uname = username.trim();
-    if (!uname || importing) return;
+  async function runImport(created: Promise<ImportCreated>) {
+    if (importing) return;
     setImporting(true);
     setError(null);
     setStage("queued");
     try {
-      const { importId, profileId } = await importByUsername(uname);
+      const { importId, profileId } = await created;
       let ready = false;
       for (let i = 0; i < 180; i++) {
         await new Promise((r) => setTimeout(r, 2000));
@@ -77,8 +78,7 @@ export default function Dashboard() {
           ready = true;
           break;
         }
-        if (st.status === "failed")
-          throw new Error(st.error ?? "Import failed — check the username.");
+        if (st.status === "failed") throw new Error(st.error ?? "Import failed.");
         setStage(st.status);
       }
       if (!ready) throw new Error("Import timed out.");
@@ -117,6 +117,17 @@ export default function Dashboard() {
     }
   }
 
+  function startImportByUsername(e?: React.FormEvent) {
+    e?.preventDefault();
+    const uname = username.trim();
+    if (!uname) return;
+    runImport(importByUsername(uname));
+  }
+
+  function startImportFromFile(file: File) {
+    runImport(uploadExport(file));
+  }
+
   const hasResults = recs !== null;
 
   return (
@@ -138,7 +149,7 @@ export default function Dashboard() {
           </p>
         )}
         <form
-          onSubmit={startImport}
+          onSubmit={startImportByUsername}
           style={{ display: "flex", justifyContent: "center", marginTop: hasResults ? 12 : 0 }}
         >
           <input
@@ -179,6 +190,41 @@ export default function Dashboard() {
             {importing ? "…" : "Import"}
           </button>
         </form>
+
+        {!hasResults && (
+          <p style={{ marginTop: 10, fontSize: 13, color: "var(--muted)" }}>
+            Username lookup blocked or failing?{" "}
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={importing}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                font: "inherit",
+                fontSize: 13,
+                color: "var(--text)",
+                textDecoration: "underline",
+                cursor: importing ? "default" : "pointer",
+              }}
+            >
+              upload your Letterboxd export .zip
+            </button>{" "}
+            instead.
+          </p>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".zip"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) startImportFromFile(file);
+          }}
+        />
 
         {importing && stage && (
           <p style={{ marginTop: 12, fontSize: 14, color: "var(--muted)" }}>

@@ -54,6 +54,13 @@ export async function importByUsername(username: string): Promise<ImportCreated>
   return unwrap<ImportCreated>(res);
 }
 
+export async function uploadExport(file: File): Promise<ImportCreated> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_BASE}/imports`, { method: "POST", body: form });
+  return unwrap<ImportCreated>(res);
+}
+
 export async function getImportStatus(importId: string): Promise<ImportStatus> {
   return unwrap<ImportStatus>(await fetch(`${API_BASE}/imports/${importId}`));
 }
