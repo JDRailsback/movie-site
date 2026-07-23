@@ -32,6 +32,20 @@ IMPORT_CORPUS_MEAN = 6.3
 ZIP_KEY = "import:{import_id}:zip"
 SCRAPE_KEY = "import:{import_id}:scrape_username"
 
+# TMDB's client already bounds real concurrent connections via a semaphore
+# (app/integrations/tmdb.py), but asyncio.gather() still holds every
+# response for the whole batch in memory until the last one lands. A large
+# personal import (hundreds-to-thousands of films on a first-time import
+# against a small local corpus) built every payload for the entire import at
+# once — full movie payloads especially (credits/keywords/release_dates via
+# append_to_response) are tens of KB each. Chunking bounds peak memory to
+# roughly one chunk's worth instead of the whole import.
+_CHUNK_SIZE = 25
+
+
+def _chunks[T](items: list[T], size: int) -> list[list[T]]:
+    return [items[i : i + size] for i in range(0, len(items), size)]
+
 
 async def run_pipeline(import_id: str, redis: Any, tmdb: TMDBClient) -> None:
     iid = uuid.UUID(import_id)
@@ -136,42 +150,46 @@ async def _match_all(
         tv_mr = choose_tv_match(f.title, f.year, tv_results)
         return f, tv_mr if (tv_mr is not None and tv_mr.confidence >= MATCH_THRESHOLD) else mr
 
-    results = await asyncio.gather(*(search_one(f) for f, _ in misses))
-
     unmatched: list[FilmRecord] = []
-    for f, mr in results:
-        if mr is not None and mr.confidence >= MATCH_THRESHOLD:
-            matched[f.lb_uri] = mr
-        else:
-            unmatched.append(f)
+    for batch in _chunks([f for f, _ in misses], _CHUNK_SIZE):
+        results = await asyncio.gather(*(search_one(f) for f in batch))
+        for f, mr in results:
+            if mr is not None and mr.confidence >= MATCH_THRESHOLD:
+                matched[f.lb_uri] = mr
+            else:
+                unmatched.append(f)
+        await progress.publish(
+            redis,
+            import_id,
+            {"status": "matching", "matched": len(matched), "total": len(films)},
+        )
 
-    # publish a mid-stage progress beat
-    await progress.publish(
-        redis, import_id, {"status": "matching", "matched": len(matched), "total": len(films)}
-    )
     return matched, unmatched
+
+
+def _persist_films(films: list[Any], tv_slugs: dict[int, str] | None) -> None:
+    with get_engine().begin() as conn:
+        for f in films:
+            slug = (tv_slugs or {}).get(abs(f.tmdb_id)) if f.tmdb_id < 0 else None
+            wr = weighted_rating(f.vote_average, f.vote_count, corpus_mean=IMPORT_CORPUS_MEAN)
+            film_repo.upsert_film(conn, f, weighted=wr, lb_slug=slug)
 
 
 async def _enrich(
     tmdb_ids: list[int], tmdb: TMDBClient, tv_slugs: dict[int, str] | None = None
 ) -> None:
-    if not tmdb_ids:
-        return
     movie_ids = [i for i in tmdb_ids if i > 0]
     tv_ids = [abs(i) for i in tmdb_ids if i < 0]
-    movie_payloads = await asyncio.gather(*(tmdb.get_movie(i) for i in movie_ids))
-    tv_payloads = await asyncio.gather(*(tmdb.get_tv(i) for i in tv_ids)) if tv_ids else []
-    all_films = [parse_movie(p, regions={settings.default_region}) for p in movie_payloads]
-    all_films += [parse_tv_show(p) for p in tv_payloads]
 
-    def _persist_films() -> None:
-        with get_engine().begin() as conn:
-            for f in all_films:
-                slug = (tv_slugs or {}).get(abs(f.tmdb_id)) if f.tmdb_id < 0 else None
-                wr = weighted_rating(f.vote_average, f.vote_count, corpus_mean=IMPORT_CORPUS_MEAN)
-                film_repo.upsert_film(conn, f, weighted=wr, lb_slug=slug)
+    for batch in _chunks(movie_ids, _CHUNK_SIZE):
+        payloads = await asyncio.gather(*(tmdb.get_movie(i) for i in batch))
+        films = [parse_movie(p, regions={settings.default_region}) for p in payloads]
+        await asyncio.to_thread(_persist_films, films, tv_slugs)
 
-    await asyncio.to_thread(_persist_films)
+    for batch in _chunks(tv_ids, _CHUNK_SIZE):
+        payloads = await asyncio.gather(*(tmdb.get_tv(i) for i in batch))
+        films = [parse_tv_show(p) for p in payloads]
+        await asyncio.to_thread(_persist_films, films, tv_slugs)
 
 
 # --- sync DB helpers (run via to_thread) ---
