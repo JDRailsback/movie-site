@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import threading
+import time
 import uuid
 from typing import Any
 
@@ -10,6 +12,21 @@ from sqlalchemy import Connection, or_, select
 
 from app.db import tables as t
 from app.domain.recommend import Candidate, Taste
+
+# The full eligible-candidate corpus is identical for every caller (only the
+# per-profile `exclude` set differs) but was previously re-queried — base
+# columns plus four separate join queries for genres/directors/keywords/
+# countries — on every single recs/discover/match request. With a
+# multi-thousand-film corpus and several concurrent requests (the frontend
+# fires overall/blind_spots/hidden_gems in parallel right after import),
+# that repeated full-corpus load was enough to exceed a 512MB instance.
+# Cache the unfiltered corpus in-process; `exclude` is then a cheap
+# in-memory filter instead of a DB round-trip. TTL (not permanent) so films
+# enriched by a later import still show up without requiring a restart.
+_CACHE_TTL_SECONDS = 900
+_candidates_cache: list[Candidate] | None = None
+_candidates_cache_at: float = 0.0
+_candidates_cache_lock = threading.Lock()
 
 
 def load_taste(conn: Connection, profile_id: uuid.UUID) -> Taste | None:
@@ -70,6 +87,22 @@ def excluded_film_ids(conn: Connection, profile_id: uuid.UUID) -> set[int]:
 
 
 def load_candidates(conn: Connection, exclude: set[int]) -> list[Candidate]:
+    """All eligible candidates minus `exclude`. The unfiltered corpus is
+    process-cached (see module docstring above) — this just applies the
+    per-profile exclusion set in memory."""
+    global _candidates_cache, _candidates_cache_at
+    now = time.monotonic()
+    if _candidates_cache is None or (now - _candidates_cache_at) > _CACHE_TTL_SECONDS:
+        with _candidates_cache_lock:
+            if _candidates_cache is None or (now - _candidates_cache_at) > _CACHE_TTL_SECONDS:
+                _candidates_cache = _load_all_candidates(conn)
+                _candidates_cache_at = now
+    if not exclude:
+        return _candidates_cache
+    return [c for c in _candidates_cache if c.tmdb_id not in exclude]
+
+
+def _load_all_candidates(conn: Connection) -> list[Candidate]:
     film = t.film
     # TMDB genre IDs excluded from all recommendation surfaces:
     #   99    = Documentary
@@ -107,8 +140,6 @@ def load_candidates(conn: Connection, exclude: set[int]) -> list[Candidate]:
 
     cands: dict[int, Candidate] = {}
     for r in rows:
-        if r.tmdb_id in exclude:
-            continue
         cands[r.tmdb_id] = Candidate(
             tmdb_id=r.tmdb_id,
             title=r.title,
