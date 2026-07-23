@@ -149,7 +149,7 @@ export function WatchlistWheel({ films }: { films: FilmCard[] }) {
 
   const lbHref = winner
     ? winner.lbSlug
-      ? `https://letterboxd.com${winner.lbSlug}`
+      ? `https://letterboxd.com/film/${winner.lbSlug}`
       : `https://letterboxd.com/tmdb/${winner.tmdbId}/`
     : undefined;
 

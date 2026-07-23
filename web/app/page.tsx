@@ -53,6 +53,7 @@ export default function Dashboard() {
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [recs, setRecs] = useState<Record<string, RecItem[]> | null>(null);
   const [watchlist, setWatchlist] = useState<FilmCard[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -92,6 +93,7 @@ export default function Dashboard() {
       sets.forEach((set, i) => {
         next[SURFACES[i].key] = set.items;
       });
+      setProfileId(profileId);
       setRecs(next);
       setWatchlist(wl);
 
@@ -254,7 +256,7 @@ export default function Dashboard() {
             <h2 style={headingStyle}>Watchlist</h2>
             {watchlist.length >= 2 ? (
               <div style={{ flex: 1, minHeight: 0 }}>
-                <WatchlistWheel films={watchlist} />
+                <WatchlistWheel key={profileId} films={watchlist} />
               </div>
             ) : (
               <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
