@@ -1,74 +1,92 @@
-# Recs — taste-driven film discovery
+# Recs
 
-A discovery layer on top of Letterboxd: it ingests your watch history and
-generates explainable, personalized film recommendations across multiple lenses.
-Not a Letterboxd replacement — the intelligent recommendation layer it lacks.
+A single-page film recommendation dashboard built on top of Letterboxd.
+Type a Letterboxd username, it imports and matches your watch history against
+a local film corpus, and shows three ranked recommendation rows plus a
+watchlist "spin the wheel" picker — no accounts, no sign-in, every visit
+reimports fresh.
 
-> **North-star metric:** does the user discover a film they end up watching and
-> loving that they wouldn't have found otherwise?
+## How it works
 
-## Documentation
-
-Planning is the source of truth for architecture and product direction — read
-these before changing it. Note: both docs predate the current frontend, which
-intentionally diverged from the planned multi-page/accounts design in favor of
-a single-page, no-accounts dashboard (see "Current state" below and the note at
-the top of each doc).
-
-- [`docs/PLAN.md`](docs/PLAN.md) — product scope, architecture, data strategy, roadmap, decisions.
-- [`docs/RECOMMENDATION_MATH.md`](docs/RECOMMENDATION_MATH.md) — engine formulas, weights, tuning.
-- [`docs/PHASE0_SCAFFOLDING.md`](docs/PHASE0_SCAFFOLDING.md) — repo layout, schema DDL, service contract.
+1. **Import** — enter a Letterboxd username. The API either scrapes the
+   public profile or (if you've uploaded one) parses an official Letterboxd
+   export ZIP, matches each film to a TMDB id, and computes a taste profile
+   (genre/director/era/country affinities, weighted against your own rating
+   scale).
+2. **Recommend** — three surfaces are precomputed against the local corpus:
+   - **Top Picks** — ranked by overall fit to your taste.
+   - **Blind Spots** — acclaimed films that fit your taste but you haven't seen.
+   - **Hidden Gems** — lower-profile films your taste says you'll love.
+3. **Watchlist** — your Letterboxd watchlist renders as a vertical spinning
+   reel; hit Spin to land on something to watch tonight.
 
 ## Stack
 
-- **web/** — Next.js (App Router) + TypeScript + Tailwind CSS. Single-page
-  dashboard, no client-side routing beyond `/`.
-- **api/** — FastAPI + SQLAlchemy + Alembic; arq workers; Postgres (+pgvector) + Redis.
-- $0 / free-tier deployment posture (PLAN §18).
+- **`web/`** — Next.js 15 (App Router), TypeScript, Tailwind CSS. One route
+  (`/`), no client-side routing, no accounts.
+- **`api/`** — FastAPI + SQLAlchemy 2.0 + Alembic, Postgres (+pgvector) for the
+  film corpus and taste vectors, Redis + [arq](https://arq-docs.helpmanual.io/)
+  for the async import pipeline (scrape/parse → TMDB match → enrich → profile
+  → precompute recs), served behind an SSE progress stream.
 
-## Quick start (local)
+## Local development
 
-Requires Docker. Then:
+Requires Docker.
 
 ```bash
-cp .env.example .env        # add TMDB_API_KEY when ready to seed
+cp .env.example .env        # add TMDB_API_KEY to actually seed/enrich films
 make up                     # postgres, redis, api, worker, web
 make upgrade                # apply DB migrations
-# api:  http://localhost:8000/health   docs: http://localhost:8000/docs
-# web:  http://localhost:3000
+make seed                   # (optional) pull a starter corpus slice from TMDB
 ```
 
-Other commands: `make help`.
+- Web: http://localhost:3000
+- API: http://localhost:8000 ([docs](http://localhost:8000/docs), `/health`)
 
-## Current state
+Other commands: `make help`. To run checks the way CI does:
 
-The frontend is a single page (`web/app/page.tsx`): enter a Letterboxd
-username, it imports and polls until ready, then shows three recommendation
-rows (Top Picks, Blind Spots, Hidden Gems) plus a watchlist "spin the wheel"
-picker. There is no login/accounts — every visit reimports the username fresh,
-nothing persists client-side. The earlier multi-route design (per-profile hub,
-Match, Discover, Taste, Settings pages) was built and then removed in favor of
-this streamlined dashboard.
+```bash
+# api/
+ruff check . && ruff format --check . && mypy app && pytest -q
 
-Backend-side, the API still exposes most of the originally planned surface
-(imports, profiles/taste, recommendations, feedback, match, discover) — see
-`api/app/routers/` for what's actually mounted. Magic-link auth (`api/app/routers/auth.py`)
-exists as a stub; the frontend does not use it.
+# web/
+pnpm exec biome check --fix --unsafe && pnpm lint && pnpm build
+```
 
-## Status
+## Repository layout
 
-**Phase 0/1 foundations are largely in place; later phases are partial.**
+```
+api/
+  app/
+    routers/        FastAPI route handlers (imports, profiles, feedback, health)
+    domain/          pure logic — taste profile, recommend, discover, match (no I/O)
+    integrations/    TMDB client, Letterboxd export parser + profile scraper
+    services/        import pipeline orchestration (the state machine)
+    repositories/    SQL access
+  workers/           arq worker entrypoint + task queue
+  alembic/           DB migrations
+  tests/
+web/
+  app/page.tsx                     the entire frontend
+  components/recs/PosterRow.tsx    scrollable recommendation row
+  components/watchlist/            the spinning watchlist reel
+  lib/api.ts                       typed fetch client for the API
+docs/                planning docs — see below
+```
 
-- ✅ Repo skeleton, docker-compose, schema migrations, FastAPI app + arq worker.
-- ✅ TMDB integration (cache + single-flight), enrichment parser, corpus seeding
-  (`api/app/scripts/seed_corpus.py`, `api/scripts/seed_catalog.py`).
-- ✅ Import state machine + SSE progress + Letterboxd export-ZIP parser + username
-  scraper + title→TMDB matching, end-to-end through `ready`.
-- ✅ Taste profile engine, recommendation surfaces (overall/blind_spots/hidden_gems),
-  feedback endpoint.
-- ⬜ Magic-link auth wired up client-side (stubbed, unused by the current UI).
-- ⬜ Multi-page profile hub, compare/share routes, era/country explorer,
-  collaborative filtering — planned in PLAN.md but not built; current frontend
-  deliberately stayed single-page instead.
+## Documentation
 
-See PLAN.md §16 for the original phased roadmap (read in light of the note above).
+- [`docs/PLAN.md`](docs/PLAN.md) — original product/architecture plan (accounts,
+  multi-page hub, social features). The live app deliberately stayed simpler
+  than this — see the note at the top of that file for what actually shipped
+  vs. what's still just planned.
+- [`docs/RECOMMENDATION_MATH.md`](docs/RECOMMENDATION_MATH.md) — the
+  recommendation engine's formulas, weights, and tuning notes. Still accurate.
+- [`docs/PHASE0_SCAFFOLDING.md`](docs/PHASE0_SCAFFOLDING.md) — DB schema DDL
+  and the Next↔FastAPI service contract.
+
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to
+`main` and every PR: `ruff`/`mypy`/`pytest` for the API, `biome`/`build` for
+the web app.
