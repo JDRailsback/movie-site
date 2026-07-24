@@ -71,7 +71,10 @@ export default function Dashboard() {
     try {
       const { importId, profileId } = await created;
       let ready = false;
-      for (let i = 0; i < 180; i++) {
+      // Matches the backend's arq job_timeout (30 min) — a full first-time
+      // import of an active user's real history can legitimately take a
+      // while now that matching/enrichment run in memory-safe chunks.
+      for (let i = 0; i < 900; i++) {
         await new Promise((r) => setTimeout(r, 2000));
         const st = await getImportStatus(importId);
         if (st.status === "ready") {

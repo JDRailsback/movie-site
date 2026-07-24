@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             on_startup=WorkerSettings.on_startup,
             on_shutdown=WorkerSettings.on_shutdown,
             redis_settings=WorkerSettings.redis_settings,
+            job_timeout=WorkerSettings.job_timeout,
             # uvicorn owns SIGINT/SIGTERM in this process, so the embedded
             # worker must not also register signal handlers.
             handle_signals=False,

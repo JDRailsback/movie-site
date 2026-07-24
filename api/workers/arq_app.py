@@ -79,3 +79,7 @@ class WorkerSettings:
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
+    # arq's default (300s) is too tight for a full import (scrape + match +
+    # enrich) of an active user's real history, now that matching/enrichment
+    # are chunked (memory-safe but slower than one big concurrent gather).
+    job_timeout = 1800
